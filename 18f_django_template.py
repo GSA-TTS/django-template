@@ -2,6 +2,7 @@
 """Create an 18F-flavored Django project."""
 
 import re
+import subprocess
 
 from pathlib import Path
 
@@ -19,23 +20,38 @@ class ProjectCreator:
         self.app_name = self._make_identifier(dest_dir)
 
         answers = self.ask_questions()
-        self._init_environment(answers)
+        self._init_templates(answers)
 
     @staticmethod
     def _make_identifier(name):
         """Make name into a valid python identifier."""
         return re.sub('\W|^(?=\d)','_', name)
 
-    def _init_environment(self, answers):
+    def _init_templates(self, answers):
         """Make a Jinja environment with our information."""
-        self.environment = Environment(
+        self.templates = Environment(
                loader=FileSystemLoader(Path(__file__).parent / "templates"),
         )
-        self.environment.globals.update({"app_name": self.app_name})
+        self.templates.globals.update({"app_name": self.app_name})
+        self.templates.globals.update(answers)
 
     def _ensure_destination_exists(self):
         """Ensure that the directory self.dest_dir exists."""
         self.dest_dir.mkdir(parents=True, exist_ok=True)
+
+    def ask(self, question):
+        """Ask a question and return the response."""
+        return input(question)
+
+    def ask_questions(self):
+        """Ask configuration questions and return dict of answers."""
+        return {}
+
+    def write_file(self, relative_path, content):
+        """Write a file into the destination directory."""
+        file_path =  self.dest_dir / relative_path
+        with open(file_path, "w") as f:
+            f.write(content)
 
     def download_file(self, url, relative_path):
         """Download a remote file to the destination directory."""
@@ -45,22 +61,18 @@ class ProjectCreator:
                 for chunk in r.iter_content(chunk_size=8192): 
                     f.write(chunk)
 
-    def ask(self, question):
-        """Ask a question and return the response."""
-        return input(question)
+    def exec_in_destination(self, command):
+        """Run a command in the destination directory.
 
-    def ask_questions(self):
-        return {}
+        `command` should be in a form that can be passed to `subprocess.check_call`
+        """
+        subprocess.check_call(command, cwd=self.dest_dir)
 
-    def write_file(self, relative_path, content):
-        """Write a file into the destination directory."""
-        file_path =  self.dest_dir / relative_path
-        with open(file_path, "w") as f:
-            f.write(content)
+    # Steps that are done when we run
 
     def create_readme(self):
         """Create a README file."""
-        template = self.environment.get_template("README.md.jinja")
+        template = self.templates.get_template("README.md.jinja")
         self.write_file("README.md", template.render())
 
     def get_policy_files(self):
@@ -69,9 +81,16 @@ class ProjectCreator:
             remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"
             self.download_file(remote_url, filename)  # filename is relative to the dest_dir
 
+    def create_django_app(self):
+        """Create the Django app."""
+        self.exec_in_destination(["django-admin", "startproject", self.app_name])
+
+    # main method that runs all of our steps
+
     def run(self):
         self.create_readme()
         self.get_policy_files()
+        self.create_django_app()
 
 def main():
     """Run the command line script."""
