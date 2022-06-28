@@ -57,3 +57,9 @@ def test_prod_settings(creator):
     creator.make_prod_settings()
     settings_dir = creator.dest_dir / creator.app_name / creator.app_name / "settings"
     assert (settings_dir / "prod.py").exists()
+
+def test_dev_settings(creator):
+    creator.create_django_app()
+    creator.make_dev_settings()
+    settings_dir = creator.dest_dir / creator.app_name / creator.app_name / "settings"
+    assert (settings_dir / "dev.py").exists()

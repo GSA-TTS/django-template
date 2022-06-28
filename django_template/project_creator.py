@@ -101,9 +101,7 @@ class ProjectCreator:
     def _make_settings_directory(self):
         """Make a settings package instead of a single settings file."""
         app_dir = self.dest_dir / self.app_name / self.app_name
-        print(app_dir)
         settings_dir = app_dir / "settings"
-        print(settings_dir)
         # should be idempotent
         settings_dir.mkdir(exist_ok=True)
         (settings_dir / "__init__.py").touch()
@@ -116,13 +114,20 @@ class ProjectCreator:
         """Make a settings file for production."""
         self._make_settings_directory()
         template = self.templates.get_template("settings/prod.py.jinja")
-        dest_path = Path(self.app_name) / self.app_name / "settings" / "prod.py"
-        #print(dest_path)
         self.write_file(
-            dest_path,
+            Path(self.app_name) / self.app_name / "settings" / "prod.py",
             template.render()
         )
 
+
+    def make_dev_settings(self):
+        """Make a settings file for production."""
+        self._make_settings_directory()
+        template = self.templates.get_template("settings/dev.py.jinja")
+        self.write_file(
+            Path(self.app_name) / self.app_name / "settings" / "dev.py",
+            template.render()
+        )
 
     # main method that runs all of our steps
 
@@ -131,5 +136,6 @@ class ProjectCreator:
         self.get_policy_files()
         self.create_django_app()
         self.make_prod_settings()
+        self.make_dev_settings()
 
 
