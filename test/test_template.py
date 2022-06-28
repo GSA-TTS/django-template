@@ -38,3 +38,22 @@ def test_django_app_created(creator):
     assert (app_location / "manage.py").exists()
     assert (app_location / creator.app_name).exists()
     assert (app_location / creator.app_name).is_dir()
+
+def test_django_settings_directory(creator):
+    creator.create_django_app()
+    creator._make_settings_directory()
+    app_dir = creator.dest_dir / creator.app_name / creator.app_name
+    assert not (app_dir / "settings.py").exists()
+    assert (app_dir / "settings" / "__init__.py").exists()
+    assert (app_dir / "settings" / "base.py").exists()
+
+def test_django_settings_directory_twice(creator):
+    creator.create_django_app()
+    creator._make_settings_directory()
+    creator._make_settings_directory()
+
+def test_prod_settings(creator):
+    creator.create_django_app()
+    creator.make_prod_settings()
+    settings_dir = creator.dest_dir / creator.app_name / creator.app_name / "settings"
+    assert (settings_dir / "prod.py").exists()
