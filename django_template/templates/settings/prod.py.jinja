@@ -22,6 +22,7 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
+
 MIDDLEWARE.append('csp.middleware.CSPMiddleware')
 allowed_sources = (
     "'self'",

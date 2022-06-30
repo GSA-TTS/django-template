@@ -10,7 +10,7 @@ from django_template import ProjectCreator
 
 @pytest.fixture
 def creator(tmp_path):
-    yield ProjectCreator(tmp_path)
+    yield ProjectCreator(tmp_path, config={"uswds": True})
 
 def test_dir_exists(creator):
     creator._ensure_destination_exists()
@@ -39,6 +39,12 @@ def test_django_app_created(creator):
     assert (app_location / creator.app_name).exists()
     assert (app_location / creator.app_name).is_dir()
 
+    assert (creator.dest_dir / "Pipfile").exists()
+
+    templates_dir = app_location / creator.app_name / "templates"
+    assert templates_dir.exists()
+    assert (templates_dir / "base.html").exists()
+
 def test_django_settings_directory(creator):
     creator.create_django_app()
     creator._make_settings_directory()
@@ -63,3 +69,11 @@ def test_dev_settings(creator):
     creator.make_dev_settings()
     settings_dir = creator.dest_dir / creator.app_name / creator.app_name / "settings"
     assert (settings_dir / "dev.py").exists()
+
+def test_npm(creator):
+    creator.set_up_npm()
+    assert (creator.dest_dir / "package.json").exists()
+    assert (creator.dest_dir / "package-lock.json").exists()
+    node_modules_path = creator.dest_dir / "node_modules"
+    assert node_modules_path.exists()
+    assert node_modules_path.is_dir()

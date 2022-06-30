@@ -10,7 +10,15 @@ from requests import get
 
 class ProjectCreator:
 
-    def __init__(self, dest_dir=None):
+    def __init__(self, dest_dir=None, config=None):
+
+        """Create a ProjectCreator.
+
+        For use off of the command line, pass in dest_dir and a config
+        dictionary, otherwise interative questions will be used to determine
+        these things.
+        """
+
         if dest_dir is None:
             # destination wasn't given
             dest_dir = self.ask("What is the name of your project?")
@@ -21,8 +29,13 @@ class ProjectCreator:
         self._ensure_destination_exists()
         self.app_name = self._make_identifier_from_path(self.dest_dir)
 
-        answers = self.ask_questions()
-        self._init_templates(answers)
+        if config is None:
+            # need to use input to get config options.
+            self.config = self.ask_questions()
+        else:
+            self.config = config
+        self.config["app_name"] = self.app_name
+        self._init_templates()
 
     @staticmethod
     def _make_identifier_from_path(path):
@@ -32,31 +45,56 @@ class ProjectCreator:
         # and fix any invalid characters
         return re.sub(r'\W|^(?=\d)','_', name)
 
-    def _init_templates(self, answers):
+    def _init_templates(self):
         """Make a Jinja environment with our information."""
         self.templates = Environment(
                loader=FileSystemLoader(Path(__file__).parent / "templates"),
         )
-        self.templates.globals.update({"app_name": self.app_name})
-        self.templates.globals.update(answers)
+        self.templates.globals.update(self.config)
 
     def _ensure_destination_exists(self):
         """Ensure that the directory self.dest_dir exists."""
         self.dest_dir.mkdir(parents=True, exist_ok=True)
 
-    def ask(self, question):
+    @staticmethod
+    def ask(question):
         """Ask a question and return the response."""
+        # ensure the question ends with a space
+        if not question.endswith(" "):
+            question += " "
         return input(question)
+
+    def yes(self, question):
+        """Ask a question and return True if the answer starts with Y."""
+        answer = self.ask(question)
+        return answer.lower().startswith("y")
 
     def ask_questions(self):
         """Ask configuration questions and return dict of answers."""
-        return {}
+        responses = {}
+
+        responses["uswds"] = self.yes(
+            "Would you like to install USWDS (requires node to already be installed)?"
+        )
+
+        return responses
 
     def write_file(self, relative_path, content):
         """Write a file into the destination directory."""
         file_path =  self.dest_dir / relative_path
         with open(file_path, "w") as f:
             f.write(content)
+
+    def copy_file(self, relative_source, relative_dest):
+        """Copy a file from our templates directory into the destination."""
+        dest_path = self.dest_dir / relative_dest
+        source_path = Path(__file__).parent / "templates" / relative_source
+        dest_path.write_bytes(source_path.read_bytes())
+
+    def write_templated_file(self, template_name, destination_path):
+        """Render a template and write it into the destination."""
+        template = self.templates.get_template(template_name)
+        self.write_file(destination_path, template.render())
 
     def download_file(self, url, relative_path):
         """Download a remote file to the destination directory."""
@@ -88,15 +126,38 @@ class ProjectCreator:
 
     def create_django_app(self):
         """Create the Django app."""
+        # Add a Pipfile to the destination
+        self.write_templated_file("Pipfile", "Pipfile")
+
+        # run django-admin startproject if necessary
         if (self.dest_dir / self.app_name).exists():
             # basic check to see if the app has been created
             if (self.dest_dir / self.app_name / "manage.py").exists():
-                return
+                pass
+            else:
             # if the directory already exists, give it as an argument to use
             # the existing directory
-            self.exec_in_destination(["django-admin", "startproject", self.app_name, self.app_name])
+                self.exec_in_destination(["django-admin", "startproject", self.app_name, self.app_name])
         else:
             self.exec_in_destination(["django-admin", "startproject", self.app_name])
+
+        # set up basic URL routing
+        self.write_templated_file(
+            "django/urls.py",
+            Path(self.app_name) / self.app_name / "urls.py"
+        )
+        # set up templates
+        template_dir = Path(self.app_name) / self.app_name / "templates"
+        (self.dest_dir / template_dir).mkdir(parents=True, exist_ok=True)
+        # copy because these are already jinja files
+        self.copy_file(
+            "django/templates/base.html",
+             template_dir / "base.html"
+        )
+        self.copy_file(
+            "django/templates/sample_index.html",
+             template_dir / "sample_index.html"
+        )
 
     def _make_settings_directory(self):
         """Make a settings package instead of a single settings file."""
@@ -113,21 +174,31 @@ class ProjectCreator:
     def make_prod_settings(self):
         """Make a settings file for production."""
         self._make_settings_directory()
-        template = self.templates.get_template("settings/prod.py.jinja")
-        self.write_file(
+        self.write_templated_file(
+            "settings/prod.py.jinja",
             Path(self.app_name) / self.app_name / "settings" / "prod.py",
-            template.render()
         )
 
 
     def make_dev_settings(self):
         """Make a settings file for production."""
         self._make_settings_directory()
-        template = self.templates.get_template("settings/dev.py.jinja")
-        self.write_file(
+        self.write_templated_file(
+            "settings/dev.py.jinja",
             Path(self.app_name) / self.app_name / "settings" / "dev.py",
-            template.render()
         )
+
+    def set_up_npm(self):
+        """install node modules in the destination."""
+        self.write_templated_file(
+            "package.json.jinja",
+            "package.json",
+            )
+        self.exec_in_destination(["npm", "install"])
+
+    def set_up_uswds_templates(self):
+        """install USWDS into the base template."""
+
 
     # main method that runs all of our steps
 
@@ -137,5 +208,9 @@ class ProjectCreator:
         self.create_django_app()
         self.make_prod_settings()
         self.make_dev_settings()
+
+        if self.config["uswds"]:
+            self.set_up_npm()
+            self.set_up_uswds_templates()
 
 

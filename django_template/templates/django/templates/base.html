@@ -1,0 +1,158 @@
+<!doctype html>{# keep this on the first line #}
+{% load i18n static %}
+<html class="no-js" lang="{{ LANGUAGE_CODE }}">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>
+    {% block title %}{% endblock %}
+    {{ site.name }}
+    {% block extra_title %}{% endblock %}
+  </title>
+  <meta name="description" content="{% block description %}{% endblock %}">
+  {% block viewport_meta %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% endblock %}
+  {% block extra_meta %}{% endblock extra_meta %}
+
+  {# TO-DO: Determine if <link rel="manifest" href="site.webmanifest"> is desirable #}
+
+  {# TO-DO: set defaults for these #}
+  <link rel="shortcut icon" href="{% static 'img/favicon.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/touch-icon.png' %}">
+
+  {% block css %}
+    <link rel="stylesheet" href="{% static 'css/uswds.min.css' %}">
+  {% endblock %}
+
+  {% block canonical %}
+    <link rel="canonical" href="{{ current_path }}">
+  {% endblock %}
+
+
+  {% block feeds %}{% endblock %}
+  {% block extra_head %}{% endblock %}
+
+  {# hat tip to USWDS... #}
+  <!-- * * * * * ======================= -->
+  <!-- * * * * * ======================= -->
+  <!-- * * * * * ======================= -->
+  <!-- * * * * * ======================= -->
+  <!-- ================================= -->
+  <!-- ================================= -->
+  <!-- ================================= -->
+</head>
+
+<body id="{% block body_id %}default{% endblock %}" class="{% block body_class %}section_front{% endblock %}">
+  <a class="usa-skipnav" href="#main-content">Skip to main content</a>
+
+  <section class="usa-banner">
+    <div class="usa-accordion">
+      <header class="usa-banner-header">
+        <div class="usa-grid usa-banner-inner">
+        <img src="{% static '/img/favicons/favicon-57.png' %}" alt="U.S. flag">
+        <p>An official website of the United States government</p>
+        <button class="usa-accordion-button usa-banner-button"
+          aria-expanded="false" aria-controls="gov-banner">
+          <span class="usa-banner-button-text">Here's how you know</span>
+        </button>
+        </div>
+      </header>
+      <div class="usa-banner-content usa-grid usa-accordion-content" id="gov-banner">
+        <div class="usa-banner-guidance-gov usa-width-one-half">
+          <img class="usa-banner-icon usa-media_block-img" src="{% static '/img/icon-dot-gov.svg' %}" alt="Dot gov">
+          <div class="usa-media_block-body">
+            <p>
+              <strong>The .gov means it’s official.</strong>
+              <br>
+              Federal government websites often end in .gov or .mil. Before sharing sensitive information, make sure you’re on a federal government site.
+            </p>
+          </div>
+        </div>
+        <div class="usa-banner-guidance-ssl usa-width-one-half">
+          <img class="usa-banner-icon usa-media_block-img" src="{% static '/img/icon-https.svg' %}" alt="Https">
+          <div class="usa-media_block-body">
+            <p>
+              <strong>The site is secure.</strong>
+              <br>
+              The <strong>https://</strong> ensures that you are connecting to the official website and that any information you provide is encrypted and transmitted securely.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% block banner %}
+    <header class="usa-header usa-header-extended" role="banner">
+      <div class="usa-navbar">
+        {% block logo %}
+          <div class="usa-logo" id="extended-logo">
+            <em class="usa-logo-text">
+              <a href="/"
+                title="Home"
+                aria-label="Home">
+                {% block site_name %}{{ site.name }}{% endblock %}
+              </a>
+            </em>
+          </div>
+        {% endblock %}
+        <button class="usa-menu-btn">Menu</button>
+      </div>
+      {% block usa_nav %}
+        {% block usa_nav_secondary %}{% endblock %}
+      {% endblock %}
+    </header>
+  {% endblock banner %}
+  {% block usa_overlay %}<div class="usa-overlay"></div>{% endblock %}
+  <div id="wrapper">
+      {% block messages %}
+        {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}
+              <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {{ message }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endblock %}
+
+      {% block section_nav %}{% endblock %}
+
+      <main id="main-content">
+        {% block hero %}{% endblock %}
+        {% block content %}{% endblock %}
+      </main>
+
+      <div role="complementary">{% block complementary %}{% endblock %}</div>
+
+      {% block content_bottom %}{% endblock %}
+    </div>
+
+    <footer id="footer" role="contentinfo">
+      {% block footer_nav %}
+      {% endblock %}
+      {% block footer %}
+        <div>
+          <p class="copyright">&copy; {{ now.year }} {{ site.name }}</p>
+        </div>
+      {% endblock %}
+    </footer>
+  </div> <!-- /#wrapper -->
+
+  {% block init_js %}{% endblock %}{# useful for vars and other initializations #}
+
+  {% block site_js %}
+  {% endblock %}
+
+  {% block app_js %}{% endblock %}
+
+  {% block extrascript %}{% endblock %}
+
+  {# asynchronous analytics #}
+  <script async id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal­Federated­Analytics­M
+in.js?agency={{ AGENCY }}"></script>
+</body>
+</html>
