@@ -159,10 +159,31 @@ class ProjectCreator:
              template_dir / "sample_index.html"
         )
 
+        # set up basic integration tests
+        test_dir = Path(self.app_name) / self.app_name / "tests"
+        (self.dest_dir / test_dir).mkdir(parents=True, exist_ok=True)
+        self.write_templated_file(
+               "django/tests/test_integration.py",
+               test_dir / "test_integration.py"
+        )
+
+    def setup_docker(self):
+        """Make a Dockerfile and docker-compose.yml in the destination."""
+        self.copy_file("Dockerfile", "Dockerfile")
+        self.write_templated_file(
+            "docker-compose.yml.jinja",
+            "docker-compose.yml"
+        )
+        self.write_templated_file(
+            "docker_entrypoint.py.jinja",
+            Path(self.app_name) / "docker_entrypoint.py"
+        )
+
     def _make_settings_directory(self):
         """Make a settings package instead of a single settings file."""
         app_dir = self.dest_dir / self.app_name / self.app_name
         settings_dir = app_dir / "settings"
+
         # should be idempotent
         settings_dir.mkdir(exist_ok=True)
         (settings_dir / "__init__.py").touch()
@@ -171,6 +192,20 @@ class ProjectCreator:
         except FileNotFoundError:
             pass
 
+        # patch the default settings to have a templates directory
+        base_file_path = settings_dir / "base.py" 
+        with open(base_file_path, "r") as f:
+            contents = f.read()
+        contents = contents.replace("'DIRS': []", "'DIRS': [BASE_DIR / 'templates']")
+        with open(base_file_path, "w") as f:
+            f.write(contents)
+
+        # need this utility for other settings files
+        self.copy_file(
+            Path("settings") / "env.py",
+            Path(self.app_name) / self.app_name / "settings"  / "env.py"
+        )
+
     def make_prod_settings(self):
         """Make a settings file for production."""
         self._make_settings_directory()
@@ -178,7 +213,6 @@ class ProjectCreator:
             "settings/prod.py.jinja",
             Path(self.app_name) / self.app_name / "settings" / "prod.py",
         )
-
 
     def make_dev_settings(self):
         """Make a settings file for production."""
@@ -197,8 +231,8 @@ class ProjectCreator:
         self.exec_in_destination(["npm", "install"])
 
     def set_up_uswds_templates(self):
-        """install USWDS into the base template."""
-
+        """install USWDS using npm and gulp."""
+        pass
 
     # main method that runs all of our steps
 
@@ -208,6 +242,9 @@ class ProjectCreator:
         self.create_django_app()
         self.make_prod_settings()
         self.make_dev_settings()
+
+        # opinionatedly run under Docker and docker-compose
+        self.setup_docker()
 
         if self.config["uswds"]:
             self.set_up_npm()

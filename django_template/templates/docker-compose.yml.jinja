@@ -1,0 +1,30 @@
+version: "3.0"
+services:
+  app:
+    build: .
+    volumes:
+      - ./{{ app_name }}:/{{ app_name }}
+    links:
+      - db
+    working_dir: /{{ app_name }}
+    entrypoint: python /{{ app_name }}/docker_entrypoint.py
+    environment:
+      - PYTHONUNBUFFERED=yup
+      - DATABASE_URL=postgres://{{ app_name }}_user:{{ app_name }}_password@db/{{ app_name }}
+      - RUNNING_IN_DOCKER=yup
+      - DJANGO_SETTINGS_MODULE={{ app_name }}.settings.dev
+      # - NEW_RELIC_LICENSE_KEY=get-from-vcap-user-provided-service (not to be used for local development)
+    stdin_open: true
+    tty: true
+    ports:
+      - "8000:8000"
+    command: "python manage.py runserver 0.0.0.0:8000"
+
+  db:
+    image: postgres:12.8
+    environment:
+      - POSTGRES_DB={{ app_name }}
+      - POSTGRES_USER={{ app_name }}_user
+      - POSTGRES_PASSWORD={{ app_name }}_password
+
+  # gulp image goes here

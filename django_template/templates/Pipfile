@@ -12,6 +12,8 @@ whitenoise = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
+django-webtest = "*"
+nplusone = "*"
 coverage = "*"
 flake8 = "*"
 black = "*"
