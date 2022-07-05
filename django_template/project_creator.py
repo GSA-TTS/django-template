@@ -163,7 +163,7 @@ class ProjectCreator:
         test_dir = Path(self.app_name) / self.app_name / "tests"
         (self.dest_dir / test_dir).mkdir(parents=True, exist_ok=True)
         self.write_templated_file(
-               "django/tests/test_integration.py",
+               "django/tests/test_integration.py.jinja",
                test_dir / "test_integration.py"
         )
 

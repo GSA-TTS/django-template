@@ -77,3 +77,10 @@ def test_npm(creator):
     node_modules_path = creator.dest_dir / "node_modules"
     assert node_modules_path.exists()
     assert node_modules_path.is_dir()
+
+def test_uswds(creator):
+	creator.set_up_npm()
+	creator.set_up_uswds_templates()
+	assert (creator.dest_dir / "gulpfile.js").exists()
+	assert (creator.dest_dir / creator.app_name / creator.app_name / "static" / "css" / "styles.css").exists()
+	assert (creator.dest_dir / creator.app_name / creator.app_name / "static" / "js" / "uswds.min.js").exists()
