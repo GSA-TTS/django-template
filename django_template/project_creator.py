@@ -232,7 +232,14 @@ class ProjectCreator:
 
     def set_up_uswds_templates(self):
         """install USWDS using npm and gulp."""
-        pass
+        self.exec_in_destination(["npm", "install"])
+        # uswds is installed, what next?
+        self.write_templated_file(
+            "gulpfile.js.jinja",
+            "gulpfile.js"
+        )
+        self.exec_in_destination(["npx", "gulp", "init"])
+        self.exec_in_destination(["npx", "gulp", "compile"])
 
     # main method that runs all of our steps
 
