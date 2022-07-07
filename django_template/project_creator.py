@@ -128,6 +128,8 @@ class ProjectCreator:
         """Create the Django app."""
         # Add a Pipfile to the destination
         self.write_templated_file("Pipfile", "Pipfile")
+        # and lock the versions
+        self.exec_in_destination(["pipenv", "lock"])
 
         # run django-admin startproject if necessary
         if (self.dest_dir / self.app_name).exists():
@@ -162,6 +164,7 @@ class ProjectCreator:
         # set up basic integration tests
         test_dir = Path(self.app_name) / self.app_name / "tests"
         (self.dest_dir / test_dir).mkdir(parents=True, exist_ok=True)
+        (self.dest_dir / test_dir / "__init__.py").touch()
         self.write_templated_file(
                "django/tests/test_integration.py.jinja",
                test_dir / "test_integration.py"
