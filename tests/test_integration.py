@@ -1,6 +1,11 @@
 
 """Test the resulting project for correctness."""
 
+import time
+
+from contextlib import contextmanager
+from subprocess import CalledProcessError
+
 import pytest
 
 from django_template.project_creator import ProjectCreator
@@ -32,4 +37,29 @@ def test_docker_tests(project):
          "test",
         ]
     )
+
+@contextmanager
+def _docker_up(project):
+    try:
+        project.exec_in_destination(
+            # run in daemon mode
+            ["docker-compose", "up", "-d"]
+        )
+        # that might take a while to get up and running, let's just wait
+        # a magic number of seconds. TODO: use a better waiting method
+        time.sleep(5)
+        yield
+    finally:
+        project.exec_in_destination(["docker-compose", "stop"])
+
+def test_page_load(project):
+    """Can load page running in Docker."""
+    with _docker_up(project):
+        project.exec_in_destination(["curl", "--fail", "localhost:8000"])
+
+def test_nonexistent_page(project):
+    """Loading a non-existent page gives an error page."""
+    with _docker_up(project):
+        with pytest.raises(CalledProcessError):
+            project.exec_in_destination(["curl", "--fail", "localhost:8000/not/a/valid/url"])
 
