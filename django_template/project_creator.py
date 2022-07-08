@@ -124,12 +124,31 @@ class ProjectCreator:
             remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"
             self.download_file(remote_url, filename)  # filename is relative to the dest_dir
 
+    def initialize_git(self):
+        """Initialize a git repository in the target if it doesn't exist."""
+        if not (self.dest_dir / ".git").exists():
+            self.exec_in_destination(["git", "init", "."])
+
+    def get_gitignore(self):
+        """Get the Python gitignore file from Github."""
+        self.download_file(
+                "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
+            ".gitignore"
+        )
+
+    def setup_precommit_hook(self):
+        """Set up a git precommit hook."""
+        self.write_templated_file("githooks/pre-commit.jinja",
+                ".git/hooks/pre-commit")
+
     def create_django_app(self):
         """Create the Django app."""
         # Add a Pipfile to the destination
         self.write_templated_file("Pipfile", "Pipfile")
-        # and lock the versions
-        self.exec_in_destination(["pipenv", "lock"])
+        # tentatively lock the versions
+        self.write_templated_file("Pipfile.lock", "Pipfile.lock")
+        # TODO: encourage users to do `pipenv lock` to get new dependency # versions
+        #self.exec_in_destination(["pipenv", "lock"])
 
         # run django-admin startproject if necessary
         if (self.dest_dir / self.app_name).exists():
@@ -231,6 +250,9 @@ class ProjectCreator:
             "package.json.jinja",
             "package.json",
             )
+        # tentatively lock dependency versions
+        self.write_templated_file("package-lock.json", "package-lock.json")
+        # TODO: encourage users to `npm update` for their own versions
         self.exec_in_destination(["npm", "install"])
 
     def set_up_uswds_templates(self):
@@ -249,6 +271,10 @@ class ProjectCreator:
     def run(self):
         self.create_readme()
         self.get_policy_files()
+        self.initialize_git()
+        self.get_gitignore()
+        self.setup_precommit_hook()
+
         self.create_django_app()
         self.make_prod_settings()
         self.make_dev_settings()
@@ -259,5 +285,3 @@ class ProjectCreator:
         if self.config["uswds"]:
             self.set_up_npm()
             self.set_up_uswds_templates()
-
-

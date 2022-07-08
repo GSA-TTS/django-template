@@ -58,7 +58,7 @@ def test_page_load(project):
         project.exec_in_destination(["curl", "--fail", "localhost:8000"])
 
 def test_nonexistent_page(project):
-    """Loading a non-existent page gives an error page."""
+    """Loading a non-existent page gives an HTTP error code."""
     with _docker_up(project):
         with pytest.raises(CalledProcessError):
             project.exec_in_destination(["curl", "--fail", "localhost:8000/not/a/valid/url"])
