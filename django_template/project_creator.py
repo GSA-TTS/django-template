@@ -139,6 +139,8 @@ class ProjectCreator:
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
         self.write_templated_file("githooks/pre-commit.jinja", ".git/hooks/pre-commit")
+        # configure flake8 to be compatible with black
+        self.write_templated_file("flake8", ".flake8")
 
     def create_django_app(self):
         """Create the Django app."""
