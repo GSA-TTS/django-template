@@ -1,7 +1,7 @@
-
 """Test the creator object's methods."""
 
 from django_template.project_creator import ProjectCreator
+
 
 def test_yes(monkeypatch, tmp_path):
     creator = ProjectCreator(tmp_path, config={})

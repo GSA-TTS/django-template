@@ -1,4 +1,3 @@
-
 import re
 import subprocess
 
@@ -9,7 +8,6 @@ from requests import get
 
 
 class ProjectCreator:
-
     def __init__(self, dest_dir=None, config=None):
 
         """Create a ProjectCreator.
@@ -43,12 +41,12 @@ class ProjectCreator:
         # Get the basename of the path
         name = path.name
         # and fix any invalid characters
-        return re.sub(r'\W|^(?=\d)','_', name)
+        return re.sub(r"\W|^(?=\d)", "_", name)
 
     def _init_templates(self):
         """Make a Jinja environment with our information."""
         self.templates = Environment(
-               loader=FileSystemLoader(Path(__file__).parent / "templates"),
+            loader=FileSystemLoader(Path(__file__).parent / "templates"),
         )
         self.templates.globals.update(self.config)
 
@@ -81,7 +79,7 @@ class ProjectCreator:
 
     def write_file(self, relative_path, content):
         """Write a file into the destination directory."""
-        file_path =  self.dest_dir / relative_path
+        file_path = self.dest_dir / relative_path
         with open(file_path, "w") as f:
             f.write(content)
 
@@ -100,8 +98,8 @@ class ProjectCreator:
         """Download a remote file to the destination directory."""
         local_filename = self.dest_dir / relative_path
         with get(url, stream=True) as r:
-            with open(local_filename, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192): 
+            with open(local_filename, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
 
     def exec_in_destination(self, command):
@@ -122,7 +120,9 @@ class ProjectCreator:
         """Get license and contributing files from 18F open source policy."""
         for filename in ["CONTRIBUTING.md", "LICENSE.md"]:
             remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"
-            self.download_file(remote_url, filename)  # filename is relative to the dest_dir
+            self.download_file(
+                remote_url, filename
+            )  # filename is relative to the dest_dir
 
     def initialize_git(self):
         """Initialize a git repository in the target if it doesn't exist."""
@@ -132,14 +132,13 @@ class ProjectCreator:
     def get_gitignore(self):
         """Get the Python gitignore file from Github."""
         self.download_file(
-                "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
-            ".gitignore"
+            "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
+            ".gitignore",
         )
 
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
-        self.write_templated_file("githooks/pre-commit.jinja",
-                ".git/hooks/pre-commit")
+        self.write_templated_file("githooks/pre-commit.jinja", ".git/hooks/pre-commit")
 
     def create_django_app(self):
         """Create the Django app."""
@@ -148,7 +147,7 @@ class ProjectCreator:
         # tentatively lock the versions
         self.write_templated_file("Pipfile.lock", "Pipfile.lock")
         # TODO: encourage users to do `pipenv lock` to get new dependency # versions
-        #self.exec_in_destination(["pipenv", "lock"])
+        # self.exec_in_destination(["pipenv", "lock"])
 
         # run django-admin startproject if necessary
         if (self.dest_dir / self.app_name).exists():
@@ -156,28 +155,25 @@ class ProjectCreator:
             if (self.dest_dir / self.app_name / "manage.py").exists():
                 pass
             else:
-            # if the directory already exists, give it as an argument to use
-            # the existing directory
-                self.exec_in_destination(["django-admin", "startproject", self.app_name, self.app_name])
+                # if the directory already exists, give it as an argument to use
+                # the existing directory
+                self.exec_in_destination(
+                    ["django-admin", "startproject", self.app_name, self.app_name]
+                )
         else:
             self.exec_in_destination(["django-admin", "startproject", self.app_name])
 
         # set up basic URL routing
         self.write_templated_file(
-            "django/urls.py",
-            Path(self.app_name) / self.app_name / "urls.py"
+            "django/urls.py", Path(self.app_name) / self.app_name / "urls.py"
         )
         # set up templates
         template_dir = Path(self.app_name) / self.app_name / "templates"
         (self.dest_dir / template_dir).mkdir(parents=True, exist_ok=True)
         # copy because these are already jinja files
+        self.copy_file("django/templates/base.html", template_dir / "base.html")
         self.copy_file(
-            "django/templates/base.html",
-             template_dir / "base.html"
-        )
-        self.copy_file(
-            "django/templates/sample_index.html",
-             template_dir / "sample_index.html"
+            "django/templates/sample_index.html", template_dir / "sample_index.html"
         )
 
         # set up basic integration tests
@@ -185,20 +181,15 @@ class ProjectCreator:
         (self.dest_dir / test_dir).mkdir(parents=True, exist_ok=True)
         (self.dest_dir / test_dir / "__init__.py").touch()
         self.write_templated_file(
-               "django/tests/test_integration.py.jinja",
-               test_dir / "test_integration.py"
+            "django/tests/test_integration.py.jinja", test_dir / "test_integration.py"
         )
 
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""
         self.copy_file("Dockerfile", "Dockerfile")
+        self.write_templated_file("docker-compose.yml.jinja", "docker-compose.yml")
         self.write_templated_file(
-            "docker-compose.yml.jinja",
-            "docker-compose.yml"
-        )
-        self.write_templated_file(
-            "docker_entrypoint.py.jinja",
-            Path(self.app_name) / "docker_entrypoint.py"
+            "docker_entrypoint.py.jinja", Path(self.app_name) / "docker_entrypoint.py"
         )
 
     def _make_settings_directory(self):
@@ -215,7 +206,7 @@ class ProjectCreator:
             pass
 
         # patch the default settings to have a templates directory
-        base_file_path = settings_dir / "base.py" 
+        base_file_path = settings_dir / "base.py"
         with open(base_file_path, "r") as f:
             contents = f.read()
         contents = contents.replace("'DIRS': []", "'DIRS': [BASE_DIR / 'templates']")
@@ -225,7 +216,7 @@ class ProjectCreator:
         # need this utility for other settings files
         self.copy_file(
             Path("settings") / "env.py",
-            Path(self.app_name) / self.app_name / "settings"  / "env.py"
+            Path(self.app_name) / self.app_name / "settings" / "env.py",
         )
 
     def make_prod_settings(self):
@@ -247,9 +238,8 @@ class ProjectCreator:
     def set_up_npm(self):
         """install node modules in the destination."""
         self.write_templated_file(
-            "package.json.jinja",
-            "package.json",
-            )
+            "package.json.jinja", "package.json",
+        )
         # tentatively lock dependency versions
         self.write_templated_file("package-lock.json", "package-lock.json")
         # TODO: encourage users to `npm update` for their own versions
@@ -259,10 +249,7 @@ class ProjectCreator:
         """install USWDS using npm and gulp."""
         self.exec_in_destination(["npm", "install"])
         # uswds is installed, what next?
-        self.write_templated_file(
-            "gulpfile.js.jinja",
-            "gulpfile.js"
-        )
+        self.write_templated_file("gulpfile.js.jinja", "gulpfile.js")
         self.exec_in_destination(["npx", "gulp", "init"])
         self.exec_in_destination(["npx", "gulp", "compile"])
 
