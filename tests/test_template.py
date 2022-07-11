@@ -134,3 +134,8 @@ def test_uswds(creator):
         / "js"
         / "uswds.min.js"
     ).exists()
+
+def test_circleci(creator):
+    creator.set_up_circleci()
+    assert (creator.dest_dir / ".circleci").exists()
+    assert (creator.dest_dir / ".circleci" / "config.yml").exists()

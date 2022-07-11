@@ -1,0 +1,79 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: cimg/python:3.10-browsers
+        environment:
+          - PIPENV_VENV_IN_PROJECT=true
+          - DJANGO_SETTINGS_MODULE={{ app_name }}.settings.prod
+          - DATABASE_URL=postgres://{{ app_name }}_use:{{ app_name }}_password@localhost/{{ app_name }}
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: cimg/postgres:14.2
+        environment:
+          - POSTGRES_DB={{ app_name }}
+          - POSTGRES_USER={{ app_name }}_user
+          - POSTGRES_PASSWORD={{ app_name }}_password
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - {% raw %}deps-{{ .Environment.CACHE_VERSION }}-{{ checksum "Pipfile" }}-{{ checksum "Pipfile.lock" }}-{{ checksum "package-lock.json" }}{% endraw %}
+
+      - run:
+          name: install dependencies
+          command: |
+            pip install pipenv
+            pipenv install --dev --deploy
+            npm ci
+            npx gulp init
+            npx gulp compile
+
+      - save_cache:
+          paths:
+            - ./.venv
+            - ~/.npm
+          key: {% raw %}deps-{{ .Environment.CACHE_VERSION }}-{{ checksum "Pipfile" }}-{{ checksum "Pipfile.lock" }}-{{ checksum "package-lock.json" }}{% endraw %}
+
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            . .venv/bin/activate
+            cd {{ app_name }}
+            python manage.py test --noinput
+            flake8
+            black --check --diff
+            bandit -r . -x docker_entrypoint.py
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./*
+
+  # deploy to staging here
+
+  # deploy to production here
+
+workflows:
+  version: 2
+  build_pull_requests:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: /.*/

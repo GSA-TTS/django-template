@@ -50,9 +50,20 @@ class ProjectCreator:
         )
         self.templates.globals.update(self.config)
 
+    def _ensure_path_exists(self, path):
+        """Ensure that the given directory exists.
+
+        If the path is relative, it is made inside of self.dest_dir.
+        """
+        if path.is_absolute():
+            path.mkdir(parents=True, exist_ok=True)
+        else:
+            (self.dest_dir / path).mkdir(parents=True, exist_ok=True)
+
+
     def _ensure_destination_exists(self):
         """Ensure that the directory self.dest_dir exists."""
-        self.dest_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_path_exists(self.dest_dir)
 
     @staticmethod
     def ask(question):
@@ -73,6 +84,12 @@ class ProjectCreator:
 
         responses["uswds"] = self.yes(
             "Would you like to install USWDS (requires node to already be installed)?"
+        )
+        responses["circleci"] = self.yes(
+            "Would you like to set up CircleCI for CI/CD?"
+        )
+        responses["github_actions"] = self.yes(
+            "Would you like to set up Github Actions for CI/CD?"
         )
 
         return responses
@@ -255,6 +272,19 @@ class ProjectCreator:
         self.exec_in_destination(["npx", "gulp", "init"])
         self.exec_in_destination(["npx", "gulp", "compile"])
 
+    def set_up_circleci(self):
+        """Set up CirclCI for CI/CD."""
+        # CircleCI config file
+        self._ensure_path_exists(Path(".circleci"))  # relative path is inside dest_dir
+        self.write_templated_file(
+            "circleci/config.yml.jinja",
+            ".circleci/config.yml"
+        )
+
+    def set_up_github_actions(self):
+        """Set up Github Actions for CI/CD."""
+
+
     # main method that runs all of our steps
 
     def run(self):
@@ -274,3 +304,9 @@ class ProjectCreator:
         if self.config["uswds"]:
             self.set_up_npm()
             self.set_up_uswds_templates()
+
+        if self.config["circleci"]:
+            self.set_up_circleci()
+
+        if self.config["github_actions"]:
+            self.set_up_github_actions()
