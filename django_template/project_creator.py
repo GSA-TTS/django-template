@@ -152,6 +152,12 @@ class ProjectCreator:
             "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
             ".gitignore",
         )
+        # need to ignore node_modules too, and the generated files
+        with open(self.dest_dir / ".gitignore", "a") as f:
+            f.write("\nnode_modules\n")
+            # and the generated files from USWDS
+            f.write(f"\n{self.app_name}/{self.app_name}/static")
+
 
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
@@ -202,6 +208,12 @@ class ProjectCreator:
         self.write_templated_file(
             "django/tests/test_integration.py.jinja", test_dir / "test_integration.py"
         )
+
+        # and a logs directory
+        logs_dir = self.dest_dir / self.app_name / self.app_name / "logs"
+        self._ensure_path_exists(logs_dir)
+        with open(logs_dir / ".gitkeep") as f:
+            f.write("keep this directory in git for CI/CD file logs")
 
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""

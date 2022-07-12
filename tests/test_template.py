@@ -75,6 +75,9 @@ def test_django_app_created(creator):
     assert templates_dir.exists()
     assert (templates_dir / "base.html").exists()
 
+    logs_dir = app_location / creator.app_name / "logs"
+    assert logs_dir.exists()
+    assert (logs_dir / ".gitkeep").exists()
 
 def test_django_settings_directory(creator):
     creator.create_django_app()
