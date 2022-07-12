@@ -212,8 +212,7 @@ class ProjectCreator:
         # and a logs directory
         logs_dir = self.dest_dir / self.app_name / self.app_name / "logs"
         self._ensure_path_exists(logs_dir)
-        with open(logs_dir / ".gitkeep") as f:
-            f.write("keep this directory in git for CI/CD file logs")
+        (logs_dir / ".gitkeep").touch()
 
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""

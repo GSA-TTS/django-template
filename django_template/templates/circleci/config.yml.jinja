@@ -11,7 +11,7 @@ jobs:
         environment:
           - PIPENV_VENV_IN_PROJECT=true
           - DJANGO_SETTINGS_MODULE={{ app_name }}.settings.prod
-          - DATABASE_URL=postgres://{{ app_name }}_use:{{ app_name }}_password@localhost/{{ app_name }}
+          - DATABASE_URL=postgres://{{ app_name }}_user:{{ app_name }}_password@localhost/{{ app_name }}
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
