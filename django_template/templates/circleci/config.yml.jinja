@@ -52,7 +52,7 @@ jobs:
             cd {{ app_name }}
             pipenv run python manage.py test --noinput
             pipenv run flake8
-            pipenv run black --check --diff
+            pipenv run black --check --diff .
             pipenv run bandit -r . -x docker_entrypoint.py
 
       - store_artifacts:
