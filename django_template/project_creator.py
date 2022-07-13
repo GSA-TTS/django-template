@@ -66,6 +66,18 @@ class ProjectCreator:
         self._ensure_path_exists(self.dest_dir)
 
     @staticmethod
+    def re_sub_file(filename, pattern, replace):
+        """Run a regexp-replace on the contents of an entire file.
+
+        Inspired by Thor's gsub_file.
+        """
+        with open(filename, 'r') as f:
+            content = f.read()
+        with open(filename, 'w') as f:
+            f.write(re.sub(pattern, replace, content, count=0, flags=re.MULTILINE))
+
+
+    @staticmethod
     def ask(question):
         """Ask a question and return the response."""
         # ensure the question ends with a space
@@ -158,7 +170,6 @@ class ProjectCreator:
             # and the generated files from USWDS
             f.write(f"\n{self.app_name}/{self.app_name}/static")
 
-
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
         self.write_templated_file("githooks/pre-commit.jinja", ".git/hooks/pre-commit")
@@ -234,6 +245,10 @@ class ProjectCreator:
             (app_dir / "settings.py").replace(settings_dir / "base.py")
         except FileNotFoundError:
             pass
+
+        # base.py shouldn't define a SECRET_KEY
+        self.re_sub_file(settings_dir / "base.py", r"^\s*SECRET_KEY = .*$", "")
+
 
         # patch the default settings to have a templates directory
         base_file_path = settings_dir / "base.py"

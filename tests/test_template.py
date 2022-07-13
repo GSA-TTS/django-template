@@ -87,6 +87,10 @@ def test_django_settings_directory(creator):
     assert (app_dir / "settings" / "__init__.py").exists()
     assert (app_dir / "settings" / "base.py").exists()
 
+    # no secret key in base.py
+    with open(app_dir / "settings" / "base.py", "r") as f:
+        assert "SECRET_KEY" not in f.read()
+
 
 def test_django_settings_directory_twice(creator):
     creator.create_django_app()
