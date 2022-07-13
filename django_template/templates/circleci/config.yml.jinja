@@ -49,12 +49,11 @@ jobs:
       - run:
           name: run tests
           command: |
-            . .venv/bin/activate
             cd {{ app_name }}
-            python manage.py test --noinput
-            flake8
-            black --check --diff
-            bandit -r . -x docker_entrypoint.py
+            pipenv run python manage.py test --noinput
+            pipenv run flake8
+            pipenv run black --check --diff
+            pipenv run bandit -r . -x docker_entrypoint.py
 
       - store_artifacts:
           path: test-reports
