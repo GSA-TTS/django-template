@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 django = "*"
+django-csp = "*"
 cfenv = "*"
 dj-database-url = "*"
 psycopg2-binary = "*"
