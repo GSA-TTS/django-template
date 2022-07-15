@@ -47,7 +47,8 @@ This script will create a new Django project.
 ## Development
 
 To run the test suite, run `pipenv install --dev` and then `pipenv run python
--m pytest` from this repository directory
+-m pytest` from this repository directory. 
+Make sure you have `npm` and `docker` installed as some tests require them.
 
 ## Contributing
 
