@@ -37,6 +37,16 @@ def test_docker_tests(project):
             "app",
             "python",
             "manage.py",
+            "migrate",
+        ]
+    )
+    project.exec_in_destination(
+        [
+            "docker-compose",
+            "run",
+            "app",
+            "python",
+            "manage.py",
             "test",
         ]
     )
