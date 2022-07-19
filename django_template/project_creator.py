@@ -60,7 +60,6 @@ class ProjectCreator:
         else:
             (self.dest_dir / path).mkdir(parents=True, exist_ok=True)
 
-
     def _ensure_destination_exists(self):
         """Ensure that the directory self.dest_dir exists."""
         self._ensure_path_exists(self.dest_dir)
@@ -85,9 +84,7 @@ class ProjectCreator:
         responses["uswds"] = self.yes(
             "Would you like to install USWDS (requires node to already be installed)?"
         )
-        responses["circleci"] = self.yes(
-            "Would you like to set up CircleCI for CI/CD?"
-        )
+        responses["circleci"] = self.yes("Would you like to set up CircleCI for CI/CD?")
         responses["github_actions"] = self.yes(
             "Would you like to set up Github Actions for CI/CD?"
         )
@@ -257,7 +254,8 @@ class ProjectCreator:
     def set_up_npm(self):
         """install node modules in the destination."""
         self.write_templated_file(
-            "package.json.jinja", "package.json",
+            "package.json.jinja",
+            "package.json",
         )
         # tentatively lock dependency versions
         self.write_templated_file("package-lock.json", "package-lock.json")
@@ -276,14 +274,10 @@ class ProjectCreator:
         """Set up CirclCI for CI/CD."""
         # CircleCI config file
         self._ensure_path_exists(Path(".circleci"))  # relative path is inside dest_dir
-        self.write_templated_file(
-            "circleci/config.yml.jinja",
-            ".circleci/config.yml"
-        )
+        self.write_templated_file("circleci/config.yml.jinja", ".circleci/config.yml")
 
     def set_up_github_actions(self):
         """Set up Github Actions for CI/CD."""
-
 
     # main method that runs all of our steps
 

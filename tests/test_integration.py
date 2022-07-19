@@ -31,7 +31,14 @@ def test_docker_compose_build(project):
 def test_docker_tests(project):
     """Can run tests in docker."""
     project.exec_in_destination(
-        ["docker-compose", "run", "app", "python", "manage.py", "test",]
+        [
+            "docker-compose",
+            "run",
+            "app",
+            "python",
+            "manage.py",
+            "test",
+        ]
     )
 
 
