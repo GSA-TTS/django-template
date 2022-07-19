@@ -301,12 +301,12 @@ class ProjectCreator:
         # opinionatedly run under Docker and docker-compose
         self.setup_docker()
 
-        if self.config["uswds"]:
+        if self.config.get("uswds"):
             self.set_up_npm()
             self.set_up_uswds_templates()
 
-        if self.config["circleci"]:
+        if self.config.get("circleci"):
             self.set_up_circleci()
 
-        if self.config["github_actions"]:
+        if self.config.get("github_actions"):
             self.set_up_github_actions()
