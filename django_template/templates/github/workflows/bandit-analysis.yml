@@ -1,0 +1,34 @@
+
+name: Bandit Scan
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'doc/**'
+      - 'README.md'
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+
+jobs:
+  bandit-scan:
+    name: Bandit Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: ./.github/actions/setup-languages
+
+    # Execute Bandit CLI and generate an output file
+    - name: Scan
+      continue-on-error: true
+      run: |
+        pipenv run bandit -f json -o bandit-output.json .
+
+    # Upload the JSON file generated in the previous step
+    - name: Upload Bandit results
+      uses: actions/upload-artifact@v1
+      with:
+        name: Bandit Security report
+        path: bandit-output.json

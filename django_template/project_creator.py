@@ -45,9 +45,8 @@ class ProjectCreator:
 
     def _init_templates(self):
         """Make a Jinja environment with our information."""
-        self.templates = Environment(
-            loader=FileSystemLoader(Path(__file__).parent / "templates"),
-        )
+        self.templates_dir = Path(__file__).parent / "templates"
+        self.templates = Environment(loader=FileSystemLoader(self.templates_dir))
         self.templates.globals.update(self.config)
 
     def _ensure_path_exists(self, path):
@@ -70,11 +69,10 @@ class ProjectCreator:
 
         Inspired by Thor's gsub_file.
         """
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             content = f.read()
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             f.write(re.sub(pattern, replace, content, count=0, flags=re.MULTILINE))
-
 
     @staticmethod
     def ask(question):
@@ -119,6 +117,35 @@ class ProjectCreator:
         """Render a template and write it into the destination."""
         template = self.templates.get_template(template_name)
         self.write_file(destination_path, template.render())
+
+    def _copy_directory_with_templates(self, relative_source_path, relative_dest_path):
+        """Copy a directory of template files into the destination.
+
+        Files whose names end with .jinja will be template substituted as they
+        are written. Any other files will be copied over directly.
+        """
+        source_dir = self.templates_dir / relative_source_path
+        destination = self.dest_dir / relative_dest_path
+        self._ensure_path_exists(destination)
+        for f in source_dir.rglob("*"):
+            print("glob object:", f)
+            relative_f = f.relative_to(source_dir)
+            if f.is_dir():
+                # create the directory in the destination
+                print("create this directory:", relative_f)
+                self._ensure_path_exists(relative_dest_path / relative_f)
+                continue
+            if f.suffix == ".jinja":
+                print("template this file:", f, relative_f)
+                # template this file
+                self.write_templated_file(
+                    str(relative_source_path / relative_f),
+                    relative_dest_path / relative_f.with_suffix(""),
+                )
+            else:
+                # just copy it over
+                print("copy this file:", f, relative_dest_path / relative_f)
+                self.copy_file(f, relative_dest_path / relative_f)
 
     def download_file(self, url, relative_path):
         """Download a remote file to the destination directory."""
@@ -246,7 +273,6 @@ class ProjectCreator:
         # base.py shouldn't define a SECRET_KEY
         self.re_sub_file(settings_dir / "base.py", r"^\s*SECRET_KEY = .*$", "")
 
-
         # patch the default settings to have a templates directory
         base_file_path = settings_dir / "base.py"
         with open(base_file_path, "r") as f:
@@ -304,6 +330,7 @@ class ProjectCreator:
 
     def set_up_github_actions(self):
         """Set up Github Actions for CI/CD."""
+        self._copy_directory_with_templates("github", ".github")
 
     # main method that runs all of our steps
 

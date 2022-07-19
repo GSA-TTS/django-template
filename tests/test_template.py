@@ -2,12 +2,28 @@
 
 import pytest
 
+from subprocess import check_call, CalledProcessError
+
 from django_template import ProjectCreator
 
 
 @pytest.fixture
 def creator(tmp_path):
     yield ProjectCreator(tmp_path, config={"uswds": True})
+
+
+def _check_npm_present():
+    """Return true if Node.js is available."""
+    try:
+        check_call(["node", "-v"])
+    except CalledProcessError:
+        return False
+    return True
+
+npm_is_present = pytest.mark.skipif(
+        not _check_npm_present(),
+        reason="Test requires node to be installed"
+    )
 
 
 def exists_and_non_empty(path):
@@ -110,6 +126,7 @@ def test_dev_settings(creator):
     assert (settings_dir / "dev.py").exists()
 
 
+@npm_is_present
 def test_npm(creator):
     creator.set_up_npm()
     assert (creator.dest_dir / "package.json").exists()
@@ -119,6 +136,7 @@ def test_npm(creator):
     assert node_modules_path.is_dir()
 
 
+@npm_is_present
 def test_uswds(creator):
     creator.set_up_npm()
     creator.set_up_uswds_templates()
@@ -145,3 +163,8 @@ def test_circleci(creator):
     creator.set_up_circleci()
     assert (creator.dest_dir / ".circleci").exists()
     assert (creator.dest_dir / ".circleci" / "config.yml").exists()
+
+def test_github_actions(creator):
+    creator.set_up_github_actions()
+    assert (creator.dest_dir / ".github" / "actions").exists()
+    assert (creator.dest_dir / ".github" / "workflows").exists()
