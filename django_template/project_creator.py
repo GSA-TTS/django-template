@@ -133,7 +133,7 @@ class ProjectCreator:
     def get_policy_files(self):
         """Get license and contributing files from 18F open source policy."""
         for filename in ["CONTRIBUTING.md", "LICENSE.md"]:
-            remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"
+            remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"  # noqa
             self.download_file(
                 remote_url, filename
             )  # filename is relative to the dest_dir

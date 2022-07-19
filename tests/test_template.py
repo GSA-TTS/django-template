@@ -1,7 +1,5 @@
 """Test template script."""
 
-import os
-
 import pytest
 
 from django_template import ProjectCreator
