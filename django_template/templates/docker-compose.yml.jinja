@@ -8,12 +8,15 @@ services:
       - db
     working_dir: /{{ app_name }}
     entrypoint: python /{{ app_name }}/docker_entrypoint.py
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
     environment:
       - PYTHONUNBUFFERED=yup
       - DATABASE_URL=postgres://{{ app_name }}_user:{{ app_name }}_password@db/{{ app_name }}
       - RUNNING_IN_DOCKER=yup
       - DJANGO_SETTINGS_MODULE={{ app_name }}.settings.dev
-      # - NEW_RELIC_LICENSE_KEY=get-from-vcap-user-provided-service (not to be used for local development)
     stdin_open: true
     tty: true
     ports:

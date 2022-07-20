@@ -20,6 +20,10 @@ def project(tmp_path_factory):
     # have to manually pipenv install
     creator.exec_in_destination(["pipenv", "install"])
 
+    # Try building the docker images here to make the later tests more
+    # reliable.
+    creator.exec_in_destination(["docker-compose", "build"])
+
     yield creator
 
 
