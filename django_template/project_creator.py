@@ -128,15 +128,12 @@ class ProjectCreator:
         destination = self.dest_dir / relative_dest_path
         self._ensure_path_exists(destination)
         for f in source_dir.rglob("*"):
-            print("glob object:", f)
             relative_f = f.relative_to(source_dir)
             if f.is_dir():
                 # create the directory in the destination
-                print("create this directory:", relative_f)
                 self._ensure_path_exists(relative_dest_path / relative_f)
                 continue
             if f.suffix == ".jinja":
-                print("template this file:", f, relative_f)
                 # template this file
                 self.write_templated_file(
                     str(relative_source_path / relative_f),
@@ -144,7 +141,6 @@ class ProjectCreator:
                 )
             else:
                 # just copy it over
-                print("copy this file:", f, relative_dest_path / relative_f)
                 self.copy_file(f, relative_dest_path / relative_f)
 
     def download_file(self, url, relative_path):

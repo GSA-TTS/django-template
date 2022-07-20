@@ -28,3 +28,4 @@ jobs:
       - name: Run Tests
         run: |
           pipenv run python manage.py test
+        working-directory: {{ app_name }}

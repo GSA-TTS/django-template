@@ -24,7 +24,7 @@ jobs:
     - name: Scan
       continue-on-error: true
       run: |
-        pipenv run bandit -f json -o bandit-output.json .
+        pipenv run bandit -f json -o bandit-output.json -r .
 
     # Upload the JSON file generated in the previous step
     - name: Upload Bandit results

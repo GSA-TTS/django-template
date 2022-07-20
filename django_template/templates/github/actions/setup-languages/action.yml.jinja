@@ -6,11 +6,14 @@ runs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10
+        python-version: "3.10"
         cache: 'pipenv'
     - name: Install pipenv
+      shell: bash
       run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
-    - run: pipenv install
+    - name: Install dependencies
+      run: pipenv install --dev
+      shell: bash
 
     {% if uswds %}
     - name: Set up node

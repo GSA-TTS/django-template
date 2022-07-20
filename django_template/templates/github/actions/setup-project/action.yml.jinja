@@ -24,3 +24,4 @@ runs:
         DATABASE_URL: {% raw %}${{ inputs.database_url }}{% endraw %}
       shell: bash
       run: pipenv run python manage.py migrate
+      working-directory: {{ app_name }}
