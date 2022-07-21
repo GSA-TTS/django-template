@@ -6,26 +6,18 @@ jobs:
   unittests:
     name: Unit tests
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_DB: {{ app_name }}_test
-          POSTGRES_USER: cidbuser
-          POSTGRES_PASSWORD: postgres
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: ./.github/actions/setup-languages
+      # we already have docker-compose set up for local
+      # testing, use that here
+      - name: Start containers
+        run: docker-compose up -d --build
 
       - name: Run Tests
-        run: |
-          pipenv run python manage.py test
-        working-directory: {{ app_name }}
+        run: docker-compose run app python manage.py test
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose down
