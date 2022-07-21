@@ -245,6 +245,11 @@ class ProjectCreator:
         self._ensure_path_exists(logs_dir)
         (logs_dir / ".gitkeep").touch()
 
+        # and a static directory
+        static_dir = self.dest_dir / self.app_name / self.app_name / "static"
+        self._ensure_path_exists(static_dir)
+        (static_dir / ".gitkeep").touch()
+
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""
         self.copy_file("Dockerfile", "Dockerfile")
