@@ -27,24 +27,28 @@ def project(tmp_path_factory):
 
     yield creator
 
+
 def _check_docker_running():
     """Return True if the Docker daemon is running."""
     try:
-        output = subprocess.check_output(["docker", "info", "-f", "{{json .ServerErrors}}"])
+        output = subprocess.check_output(
+            ["docker", "info", "-f", "{{json .ServerErrors}}"]
+        )
     except CalledProcessError:
         return False
 
-    #output is bytes, so need to decode it lossily into a string
+    # output is bytes, so need to decode it lossily into a string
     output = output.decode("ascii", "ignore")
     if output.startswith("null"):
         # no server errors so docker server is running
         return True
     return False
 
+
 docker_is_running = pytest.mark.skipif(
-            not _check_docker_running(),
-            reason="Docker must be running for integration tests"
-            )
+    not _check_docker_running(), reason="Docker must be running for integration tests"
+)
+
 
 @docker_is_running
 def test_docker_compose_build(project):
