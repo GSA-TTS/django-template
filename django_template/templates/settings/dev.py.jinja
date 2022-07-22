@@ -23,6 +23,8 @@ INTERNAL_IPS = [
     "::1",
 ]
 
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+
 DATABASES["default"] = dj_database_url.config(
     default="postgres://{{ app_name }}:{{ app_name }}@localhost/{{ app_name }}"
 )

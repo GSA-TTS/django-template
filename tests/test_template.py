@@ -105,6 +105,11 @@ def test_dev_settings(creator):
     assert (settings_dir / "dev.py").exists()
 
 
+def test_owasp_configuration(creator):
+    creator.setup_owasp()
+    assert (creator.dest_dir / "zap.conf").exists()
+
+
 def test_npm(creator):
     creator.set_up_npm()
     assert (creator.dest_dir / "package.json").exists()

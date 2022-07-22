@@ -211,6 +211,10 @@ class ProjectCreator:
             "docker_entrypoint.py.jinja", Path(self.app_name) / "docker_entrypoint.py"
         )
 
+    def setup_owasp(self):
+        """Configuration for OWASP Zap scanning using docker-compose."""
+        self.copy_file("zap.conf", "zap.conf")
+
     def _make_settings_directory(self):
         """Make a settings package instead of a single settings file."""
         app_dir = self.dest_dir / self.app_name / self.app_name
@@ -300,6 +304,7 @@ class ProjectCreator:
 
         # opinionatedly run under Docker and docker-compose
         self.setup_docker()
+        self.setup_owasp()
 
         if self.config["uswds"]:
             self.set_up_npm()
