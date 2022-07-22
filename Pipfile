@@ -10,7 +10,7 @@ django = "*"
 
 [dev-packages]
 pytest = "*"
-coverage = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.10"
