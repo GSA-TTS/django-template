@@ -2,7 +2,7 @@
 
 import pytest
 
-from django_template import ProjectCreator
+from django_template.project_creator import ProjectCreator
 
 
 @pytest.fixture
@@ -37,6 +37,7 @@ def test_policy_files_exist(creator):
 def test_git_initialize(creator):
     creator.initialize_git()
     assert (creator.dest_dir / ".git").exists()
+    assert "main" in creator.exec_in_destination(["git", "branch", "--show-current"])
 
 
 def test_git_initialize_twice(creator):

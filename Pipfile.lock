@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "55fb7ba580c6ccaf6278e97c5042128fdd214d35694295209f54b20c59599bd2"
+            "sha256": "de93a60858f6b6d79e7f7e7fe060cb09baeeb4929ba7cf75f7b34e84f3f0d632"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -39,6 +39,14 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==2.1.0"
+        },
+        "click": {
+            "hashes": [
+                "sha256:7682dc8afb30297001674575ea00d1814d808d6a36af415a82bd481d37ba7b8e",
+                "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"
+            ],
+            "index": "pypi",
+            "version": "==8.1.3"
         },
         "django": {
             "hashes": [
@@ -178,7 +186,7 @@
                 "sha256:7682dc8afb30297001674575ea00d1814d808d6a36af415a82bd481d37ba7b8e",
                 "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"
             ],
-            "markers": "python_version >= '3.7'",
+            "index": "pypi",
             "version": "==8.1.3"
         },
         "flake8": {
@@ -280,6 +288,14 @@
             ],
             "index": "pypi",
             "version": "==7.1.2"
+        },
+        "pytest-click": {
+            "hashes": [
+                "sha256:eade4742c2f02c345e78a32534a43e8db04acf98d415090539dacc880b7cd0e9",
+                "sha256:fdd9f6721f877dda021e7c5dc73e70aecd37e5ed23ec6820f8a7b3fd7b4f8d30"
+            ],
+            "index": "pypi",
+            "version": "==1.1.0"
         },
         "tomli": {
             "hashes": [
