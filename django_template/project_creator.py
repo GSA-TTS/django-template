@@ -168,19 +168,7 @@ class ProjectCreator:
         # TODO: encourage users to do `pipenv lock` to get new dependency # versions
         # self.exec_in_destination(["pipenv", "lock"])
 
-        # run django-admin startproject if necessary
-        if (self.dest_dir / self.app_name).exists():
-            # basic check to see if the app has been created
-            if (self.dest_dir / self.app_name / "manage.py").exists():
-                pass
-            else:
-                # if the directory already exists, give it as an argument to use
-                # the existing directory
-                self.exec_in_destination(
-                    ["django-admin", "startproject", self.app_name, self.app_name]
-                )
-        else:
-            self.exec_in_destination(["django-admin", "startproject", self.app_name])
+        self.setup_django_project()
 
         # set up basic URL routing
         self.write_templated_file(
@@ -203,6 +191,14 @@ class ProjectCreator:
             "django/tests/test_integration.py.jinja", test_dir / "test_integration.py"
         )
         return self.dest_dir
+
+    def setup_django_project(self):
+        # run django-admin startproject if necessary
+        if (self.dest_dir / self.app_name).exists():
+            # basic check to see if the app has been created
+            if (self.dest_dir / self.app_name / "manage.py").exists():
+                return
+        self.exec_in_destination(["django-admin", "startproject", self.app_name])
 
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""
