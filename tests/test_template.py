@@ -75,6 +75,9 @@ def test_django_app_created(creator):
     assert templates_dir.exists()
     assert (templates_dir / "base.html").exists()
 
+    logs_dir = app_location / creator.app_name / "logs"
+    assert logs_dir.exists()
+    assert (logs_dir / ".gitkeep").exists()
 
 def test_django_settings_directory(creator):
     creator.create_django_app()
@@ -83,6 +86,10 @@ def test_django_settings_directory(creator):
     assert not (app_dir / "settings.py").exists()
     assert (app_dir / "settings" / "__init__.py").exists()
     assert (app_dir / "settings" / "base.py").exists()
+
+    # no secret key in base.py
+    with open(app_dir / "settings" / "base.py", "r") as f:
+        assert "SECRET_KEY" not in f.read()
 
 
 def test_django_settings_directory_twice(creator):

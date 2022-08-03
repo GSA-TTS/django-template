@@ -66,6 +66,18 @@ class ProjectCreator:
         self._ensure_path_exists(self.dest_dir)
 
     @staticmethod
+    def re_sub_file(filename, pattern, replace):
+        """Run a regexp-replace on the contents of an entire file.
+
+        Inspired by Thor's gsub_file.
+        """
+        with open(filename, 'r') as f:
+            content = f.read()
+        with open(filename, 'w') as f:
+            f.write(re.sub(pattern, replace, content, count=0, flags=re.MULTILINE))
+
+
+    @staticmethod
     def ask(question):
         """Ask a question and return the response."""
         # ensure the question ends with a space
@@ -152,6 +164,11 @@ class ProjectCreator:
             "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
             ".gitignore",
         )
+        # need to ignore node_modules too, and the generated files
+        with open(self.dest_dir / ".gitignore", "a") as f:
+            f.write("\nnode_modules\n")
+            # and the generated files from USWDS
+            f.write(f"\n{self.app_name}/{self.app_name}/static")
 
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
@@ -203,6 +220,11 @@ class ProjectCreator:
             "django/tests/test_integration.py.jinja", test_dir / "test_integration.py"
         )
 
+        # and a logs directory
+        logs_dir = self.dest_dir / self.app_name / self.app_name / "logs"
+        self._ensure_path_exists(logs_dir)
+        (logs_dir / ".gitkeep").touch()
+
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""
         self.copy_file("Dockerfile", "Dockerfile")
@@ -223,6 +245,10 @@ class ProjectCreator:
             (app_dir / "settings.py").replace(settings_dir / "base.py")
         except FileNotFoundError:
             pass
+
+        # base.py shouldn't define a SECRET_KEY
+        self.re_sub_file(settings_dir / "base.py", r"^\s*SECRET_KEY = .*$", "")
+
 
         # patch the default settings to have a templates directory
         base_file_path = settings_dir / "base.py"
