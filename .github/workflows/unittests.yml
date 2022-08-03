@@ -1,0 +1,17 @@
+name: Unit tests
+
+on: [pull_request, push]
+
+jobs:
+  unittests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: setup
+        uses: ./.github/actions/setup-languages
+
+      - name: Run Tests
+        run: |
+          pipenv run python -m pytest

@@ -1,7 +1,5 @@
 """Test template script."""
 
-import os
-
 import pytest
 
 from django_template import ProjectCreator
@@ -141,6 +139,7 @@ def test_uswds(creator):
         / "js"
         / "uswds.min.js"
     ).exists()
+
 
 def test_circleci(creator):
     creator.set_up_circleci()

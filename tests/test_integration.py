@@ -20,6 +20,10 @@ def project(tmp_path_factory):
     # have to manually pipenv install
     creator.exec_in_destination(["pipenv", "install"])
 
+    # Try building the docker images here to make the later tests more
+    # reliable.
+    creator.exec_in_destination(["docker-compose", "build"])
+
     yield creator
 
 
@@ -31,7 +35,24 @@ def test_docker_compose_build(project):
 def test_docker_tests(project):
     """Can run tests in docker."""
     project.exec_in_destination(
-        ["docker-compose", "run", "app", "python", "manage.py", "test",]
+        [
+            "docker-compose",
+            "run",
+            "app",
+            "python",
+            "manage.py",
+            "migrate",
+        ]
+    )
+    project.exec_in_destination(
+        [
+            "docker-compose",
+            "run",
+            "app",
+            "python",
+            "manage.py",
+            "test",
+        ]
     )
 
 
