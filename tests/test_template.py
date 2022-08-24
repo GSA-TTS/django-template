@@ -2,6 +2,8 @@
 
 import pytest
 
+from subprocess import check_call, CalledProcessError
+
 from django_template.project_creator import ProjectCreator
 
 
