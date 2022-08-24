@@ -1,0 +1,27 @@
+name: Set up project with database
+description: Setup Python, {% if uswds %}Javascript, {% endif %}and load the database schema into a running postgres db
+inputs:
+  django_settings_module:
+    description: DJANGO_SETTINGS_MODULE to set. Defaults to {{ app_name }}.settings.prod
+    required: false
+    default: {{ app_name }}.settings.prod
+  database_url:
+    description: DATABASE_URL to set
+    required: false
+    default: postgres://cidbuser:postgres@localhost:5432/{{ app_name }}_test
+outputs:
+  database_url:
+    value: {% raw %}${{ inputs.database_url }}{% endraw %}
+runs:
+  using: composite
+  steps:
+    - name: Set up Python{% if uswds %}& Javascript{% endif %}
+      uses: ./.github/actions/setup-languages
+
+    - name: Set up database
+      env:
+        DJANGO_SETTINGS_MODULE: {% raw %}${{ inputs.django_settings_module }}{% endraw %}
+        DATABASE_URL: {% raw %}${{ inputs.database_url }}{% endraw %}
+      shell: bash
+      run: pipenv run python manage.py migrate
+      working-directory: {{ app_name }}

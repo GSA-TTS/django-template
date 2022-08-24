@@ -1,0 +1,18 @@
+name: Code linting
+
+on: [pull_request]
+
+jobs:
+  linting:
+    name: Code linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/setup-languages
+
+      - name: Run Linters
+        run: |
+          pipenv run flake8
+          pipenv run black --check --diff .
