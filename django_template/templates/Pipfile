@@ -5,12 +5,14 @@ name = "pypi"
 
 [packages]
 django = "*"
+django-csp = "*"
 cfenv = "*"
 dj-database-url = "*"
 psycopg2-binary = "*"
 whitenoise = "*"
 
 [dev-packages]
+wait4it = "*"
 django-debug-toolbar = "*"
 django-webtest = "*"
 nplusone = "*"
