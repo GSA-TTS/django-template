@@ -13,6 +13,8 @@ import os
 import pwd
 import subprocess  # nosec
 
+from wait4it import wait_for
+
 from {{ app_name }}.settings.env import env
 
 HOST_UID = os.stat("/{{ app_name }}").st_uid
@@ -36,6 +38,12 @@ def does_uid_exist(uid):
 
 
 if __name__ == "__main__":
+
+    # We use this entrypoint in docker-compose and we don't want to proceed
+    # until the database container there is running AND has their TCP port
+    # accepting connections
+    wait_for(host="db", port=5432, timeout=5)
+
     if HOST_UID != os.geteuid():
         if not does_uid_exist(HOST_UID):
             username = HOST_USER
