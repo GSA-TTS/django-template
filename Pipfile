@@ -7,9 +7,13 @@ name = "pypi"
 jinja2 = "*"
 requests = "*"
 django = "*"
+click = "*"
 
 [dev-packages]
 pytest = "*"
+flake8 = "*"
+black = "*"
+pytest-click = "*"
 
 [requires]
 python_version = "3.10"

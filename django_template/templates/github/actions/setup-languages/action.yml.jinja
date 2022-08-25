@@ -1,0 +1,27 @@
+name: Set up languages
+description: Set up python, (optional) javascript, and their dependencies
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+        cache: 'pipenv'
+    - name: Install pipenv
+      shell: bash
+      run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+    - name: Install dependencies
+      run: pipenv install --dev
+      shell: bash
+
+    {% if uswds %}
+    - name: Set up node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+        cache: 'npm'
+    - name: Install npm dependencies
+      shell: bash
+      run: npm ci
+    {% endif %}

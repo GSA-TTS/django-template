@@ -1,6 +1,6 @@
 # django-template
 
-This script will create a new Django project.
+This script will create a new Django project using various defaults for US government websites.
 
 ## Use for new project
 
@@ -8,6 +8,22 @@ This script will create a new Django project.
 1. Run `pipenv run python 18f_django_template.py`
 
 ### Available Options
+
+If any of these options are not provided on the command line, then you will be
+prompted for them interactively.
+
+* `--app-name=<new-application-name>`: This is used as the name of the new application's directory and
+  a Python identifier is derived from it and used as the name of the new Django
+  app inside that directory.
+
+* `--uswds/--no-uswds`: For application's that don't have an HTML frontend, you
+can specify `--no-uswds` to not install the US Web Design System (USWDS). If
+you do choose to install USWDS, then you will need to have Node.js/npm
+installed locally for the installation.
+
+* `--circleci/--no-circleci`: Configure continuous integration with the CircleCI service (or not). The resulting project will have a `.circleci/config.yml` file.
+
+* `--github-actions/--no-github-actions`: Configure continuous integration with Github Actions. The resulting project will have `.github/actions` and `.github/workflows` directories.
 
 ### What `18f_django_template.py` does
 
@@ -46,9 +62,9 @@ This script will create a new Django project.
 
 ## Development
 
-To run the test suite, run `pipenv install --dev` and then `pipenv run pytest` 
-from this repository directory. 
-Make sure you have `npm` and `docker` installed as some tests require them.
+To run the test suite, run `pipenv install --dev` and then `pipenv run pytest`
+from this repository directory.  Make sure you have `npm` and `docker`
+installed as some tests require them.
 
 ## Contributing
 

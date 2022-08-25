@@ -3,6 +3,7 @@ import subprocess
 
 from pathlib import Path
 
+from click import echo
 from jinja2 import Environment, FileSystemLoader
 from requests import get
 
@@ -20,12 +21,10 @@ class ProjectCreator:
         if dest_dir is None:
             # destination wasn't given
             dest_dir = self.ask("What is the name of your project?")
-            self.dest_dir = (Path("..") / Path(dest_dir)).resolve()
-        else:
-            # destination was given, make sure it's a path
-            self.dest_dir = Path(dest_dir)
+        self.dest_dir = (Path("..") / Path(dest_dir)).resolve()
         self._ensure_destination_exists()
         self.app_name = self._make_identifier_from_path(self.dest_dir)
+        echo(f"Creating Django app named {self.app_name} in directory {self.dest_dir}")
 
         if config is None:
             # need to use input to get config options.
@@ -45,9 +44,8 @@ class ProjectCreator:
 
     def _init_templates(self):
         """Make a Jinja environment with our information."""
-        self.templates = Environment(
-            loader=FileSystemLoader(Path(__file__).parent / "templates"),
-        )
+        self.templates_dir = Path(__file__).parent / "templates"
+        self.templates = Environment(loader=FileSystemLoader(self.templates_dir))
         self.templates.globals.update(self.config)
 
     def _ensure_path_exists(self, path):
@@ -60,10 +58,20 @@ class ProjectCreator:
         else:
             (self.dest_dir / path).mkdir(parents=True, exist_ok=True)
 
-
     def _ensure_destination_exists(self):
         """Ensure that the directory self.dest_dir exists."""
         self._ensure_path_exists(self.dest_dir)
+
+    @staticmethod
+    def re_sub_file(filename, pattern, replace):
+        """Run a regexp-replace on the contents of an entire file.
+
+        Inspired by Thor's gsub_file.
+        """
+        with open(filename, "r") as f:
+            content = f.read()
+        with open(filename, "w") as f:
+            f.write(re.sub(pattern, replace, content, count=0, flags=re.MULTILINE))
 
     @staticmethod
     def ask(question):
@@ -85,9 +93,7 @@ class ProjectCreator:
         responses["uswds"] = self.yes(
             "Would you like to install USWDS (requires node to already be installed)?"
         )
-        responses["circleci"] = self.yes(
-            "Would you like to set up CircleCI for CI/CD?"
-        )
+        responses["circleci"] = self.yes("Would you like to set up CircleCI for CI/CD?")
         responses["github_actions"] = self.yes(
             "Would you like to set up Github Actions for CI/CD?"
         )
@@ -111,6 +117,31 @@ class ProjectCreator:
         template = self.templates.get_template(template_name)
         self.write_file(destination_path, template.render())
 
+    def _copy_directory_with_templates(self, relative_source_path, relative_dest_path):
+        """Copy a directory of template files into the destination.
+
+        Files whose names end with .jinja will be template substituted as they
+        are written. Any other files will be copied over directly.
+        """
+        source_dir = self.templates_dir / relative_source_path
+        destination = self.dest_dir / relative_dest_path
+        self._ensure_path_exists(destination)
+        for f in source_dir.rglob("*"):
+            relative_f = f.relative_to(source_dir)
+            if f.is_dir():
+                # create the directory in the destination
+                self._ensure_path_exists(relative_dest_path / relative_f)
+                continue
+            if f.suffix == ".jinja":
+                # template this file
+                self.write_templated_file(
+                    str(relative_source_path / relative_f),
+                    relative_dest_path / relative_f.with_suffix(""),
+                )
+            else:
+                # just copy it over
+                self.copy_file(f, relative_dest_path / relative_f)
+
     def download_file(self, url, relative_path):
         """Download a remote file to the destination directory."""
         local_filename = self.dest_dir / relative_path
@@ -122,9 +153,11 @@ class ProjectCreator:
     def exec_in_destination(self, command):
         """Run a command in the destination directory.
 
-        `command` should be in a form that can be passed to `subprocess.check_call`
+        `command` should be in a form that can be passed to `subprocess.check_output`
+
+        Returns stdout of the executed command.
         """
-        subprocess.check_call(command, cwd=self.dest_dir)
+        return subprocess.check_output(command, cwd=self.dest_dir, encoding="utf-8")
 
     # Steps that are done when we run
 
@@ -136,7 +169,7 @@ class ProjectCreator:
     def get_policy_files(self):
         """Get license and contributing files from 18F open source policy."""
         for filename in ["CONTRIBUTING.md", "LICENSE.md"]:
-            remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"
+            remote_url = f"https://raw.githubusercontent.com/18F/open-source-policy/master/{filename}"  # noqa
             self.download_file(
                 remote_url, filename
             )  # filename is relative to the dest_dir
@@ -145,6 +178,8 @@ class ProjectCreator:
         """Initialize a git repository in the target if it doesn't exist."""
         if not (self.dest_dir / ".git").exists():
             self.exec_in_destination(["git", "init", "."])
+            # Use a different initial branch name than "master"
+            self.exec_in_destination(["git", "branch", "-m", "main"])
 
     def get_gitignore(self):
         """Get the Python gitignore file from Github."""
@@ -152,6 +187,11 @@ class ProjectCreator:
             "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore",
             ".gitignore",
         )
+        # need to ignore node_modules too, and the generated files
+        with open(self.dest_dir / ".gitignore", "a") as f:
+            f.write("\nnode_modules\n")
+            # and the generated files from USWDS
+            f.write(f"\n{self.app_name}/{self.app_name}/static")
 
     def setup_precommit_hook(self):
         """Set up a git precommit hook."""
@@ -203,6 +243,16 @@ class ProjectCreator:
             "django/tests/test_integration.py.jinja", test_dir / "test_integration.py"
         )
 
+        # and a logs directory
+        logs_dir = self.dest_dir / self.app_name / self.app_name / "logs"
+        self._ensure_path_exists(logs_dir)
+        (logs_dir / ".gitkeep").touch()
+
+        # and a static directory
+        static_dir = self.dest_dir / self.app_name / self.app_name / "static"
+        self._ensure_path_exists(static_dir)
+        (static_dir / ".gitkeep").touch()
+
     def setup_docker(self):
         """Make a Dockerfile and docker-compose.yml in the destination."""
         self.copy_file("Dockerfile", "Dockerfile")
@@ -228,11 +278,14 @@ class ProjectCreator:
         except FileNotFoundError:
             pass
 
+        # base.py shouldn't define a SECRET_KEY
+        self.re_sub_file(settings_dir / "base.py", r"^\s*SECRET_KEY = .*$", "")
+
         # patch the default settings to have a templates directory
         base_file_path = settings_dir / "base.py"
         with open(base_file_path, "r") as f:
             contents = f.read()
-        contents = contents.replace("'DIRS': []", "'DIRS': [BASE_DIR / 'templates']")
+        contents = contents.replace('"DIRS": []', '"DIRS": [BASE_DIR / "templates"]')
         with open(base_file_path, "w") as f:
             f.write(contents)
 
@@ -261,7 +314,8 @@ class ProjectCreator:
     def set_up_npm(self):
         """install node modules in the destination."""
         self.write_templated_file(
-            "package.json.jinja", "package.json",
+            "package.json.jinja",
+            "package.json",
         )
         # tentatively lock dependency versions
         self.write_templated_file("package-lock.json", "package-lock.json")
@@ -280,14 +334,11 @@ class ProjectCreator:
         """Set up CirclCI for CI/CD."""
         # CircleCI config file
         self._ensure_path_exists(Path(".circleci"))  # relative path is inside dest_dir
-        self.write_templated_file(
-            "circleci/config.yml.jinja",
-            ".circleci/config.yml"
-        )
+        self.write_templated_file("circleci/config.yml.jinja", ".circleci/config.yml")
 
     def set_up_github_actions(self):
         """Set up Github Actions for CI/CD."""
-
+        self._copy_directory_with_templates("github", ".github")
 
     # main method that runs all of our steps
 
@@ -306,12 +357,12 @@ class ProjectCreator:
         self.setup_docker()
         self.setup_owasp()
 
-        if self.config["uswds"]:
+        if self.config.get("uswds"):
             self.set_up_npm()
             self.set_up_uswds_templates()
 
-        if self.config["circleci"]:
+        if self.config.get("circleci"):
             self.set_up_circleci()
 
-        if self.config["github_actions"]:
+        if self.config.get("github_actions"):
             self.set_up_github_actions()

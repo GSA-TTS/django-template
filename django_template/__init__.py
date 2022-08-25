@@ -1,1 +1,3 @@
-from .project_creator import ProjectCreator
+from .template_command import template_command
+
+__all__ = ["template_command"]

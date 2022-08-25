@@ -1,15 +1,29 @@
 """Test template script."""
 
-import os
-
 import pytest
 
-from django_template import ProjectCreator
+from subprocess import check_call, CalledProcessError
+
+from django_template.project_creator import ProjectCreator
 
 
 @pytest.fixture
 def creator(tmp_path):
     yield ProjectCreator(tmp_path, config={"uswds": True})
+
+
+def _check_npm_present():
+    """Return true if Node.js is available."""
+    try:
+        check_call(["node", "-v"])
+    except CalledProcessError:
+        return False
+    return True
+
+
+npm_is_present = pytest.mark.skipif(
+    not _check_npm_present(), reason="Test requires node to be installed"
+)
 
 
 def exists_and_non_empty(path):
@@ -39,6 +53,7 @@ def test_policy_files_exist(creator):
 def test_git_initialize(creator):
     creator.initialize_git()
     assert (creator.dest_dir / ".git").exists()
+    assert "main" in creator.exec_in_destination(["git", "branch", "--show-current"])
 
 
 def test_git_initialize_twice(creator):
@@ -75,6 +90,10 @@ def test_django_app_created(creator):
     assert templates_dir.exists()
     assert (templates_dir / "base.html").exists()
 
+    logs_dir = app_location / creator.app_name / "logs"
+    assert logs_dir.exists()
+    assert (logs_dir / ".gitkeep").exists()
+
 
 def test_django_settings_directory(creator):
     creator.create_django_app()
@@ -83,6 +102,10 @@ def test_django_settings_directory(creator):
     assert not (app_dir / "settings.py").exists()
     assert (app_dir / "settings" / "__init__.py").exists()
     assert (app_dir / "settings" / "base.py").exists()
+
+    # no secret key in base.py
+    with open(app_dir / "settings" / "base.py", "r") as f:
+        assert "SECRET_KEY" not in f.read()
 
 
 def test_django_settings_directory_twice(creator):
@@ -110,6 +133,7 @@ def test_owasp_configuration(creator):
     assert (creator.dest_dir / "zap.conf").exists()
 
 
+@npm_is_present
 def test_npm(creator):
     creator.set_up_npm()
     assert (creator.dest_dir / "package.json").exists()
@@ -119,6 +143,7 @@ def test_npm(creator):
     assert node_modules_path.is_dir()
 
 
+@npm_is_present
 def test_uswds(creator):
     creator.set_up_npm()
     creator.set_up_uswds_templates()
@@ -140,7 +165,14 @@ def test_uswds(creator):
         / "uswds.min.js"
     ).exists()
 
+
 def test_circleci(creator):
     creator.set_up_circleci()
     assert (creator.dest_dir / ".circleci").exists()
     assert (creator.dest_dir / ".circleci" / "config.yml").exists()
+
+
+def test_github_actions(creator):
+    creator.set_up_github_actions()
+    assert (creator.dest_dir / ".github" / "actions").exists()
+    assert (creator.dest_dir / ".github" / "workflows").exists()

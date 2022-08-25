@@ -1,0 +1,16 @@
+name: Set up python
+description: Set up python and dependencies
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pipenv'
+    - name: Install pipenv
+      shell: bash
+      run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+    - name: Install dependencies
+      shell: bash
+      run: pipenv install --dev
