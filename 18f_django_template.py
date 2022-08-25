@@ -1,12 +1,9 @@
 """Create an 18F-flavored Django project."""
 
-from django_template import ProjectCreator
+import sys
 
-
-def main():
-    """Run the command line script."""
-    ProjectCreator().run()
+from django_template import template_command
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(template_command())

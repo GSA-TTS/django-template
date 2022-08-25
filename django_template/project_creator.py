@@ -3,6 +3,7 @@ import subprocess
 
 from pathlib import Path
 
+from click import echo
 from jinja2 import Environment, FileSystemLoader
 from requests import get
 
@@ -20,12 +21,10 @@ class ProjectCreator:
         if dest_dir is None:
             # destination wasn't given
             dest_dir = self.ask("What is the name of your project?")
-            self.dest_dir = (Path("..") / Path(dest_dir)).resolve()
-        else:
-            # destination was given, make sure it's a path
-            self.dest_dir = Path(dest_dir)
+        self.dest_dir = (Path("..") / Path(dest_dir)).resolve()
         self._ensure_destination_exists()
         self.app_name = self._make_identifier_from_path(self.dest_dir)
+        echo(f"Creating Django app named {self.app_name} in directory {self.dest_dir}")
 
         if config is None:
             # need to use input to get config options.
@@ -154,9 +153,11 @@ class ProjectCreator:
     def exec_in_destination(self, command):
         """Run a command in the destination directory.
 
-        `command` should be in a form that can be passed to `subprocess.check_call`
+        `command` should be in a form that can be passed to `subprocess.check_output`
+
+        Returns stdout of the executed command.
         """
-        subprocess.check_call(command, cwd=self.dest_dir)
+        return subprocess.check_output(command, cwd=self.dest_dir, encoding="utf-8")
 
     # Steps that are done when we run
 
@@ -177,6 +178,8 @@ class ProjectCreator:
         """Initialize a git repository in the target if it doesn't exist."""
         if not (self.dest_dir / ".git").exists():
             self.exec_in_destination(["git", "init", "."])
+            # Use a different initial branch name than "master"
+            self.exec_in_destination(["git", "branch", "-m", "main"])
 
     def get_gitignore(self):
         """Get the Python gitignore file from Github."""
@@ -278,7 +281,7 @@ class ProjectCreator:
         base_file_path = settings_dir / "base.py"
         with open(base_file_path, "r") as f:
             contents = f.read()
-        contents = contents.replace("'DIRS': []", "'DIRS': [BASE_DIR / 'templates']")
+        contents = contents.replace('"DIRS": []', '"DIRS": [BASE_DIR / "templates"]')
         with open(base_file_path, "w") as f:
             f.write(contents)
 
