@@ -281,7 +281,7 @@ class ProjectCreator:
         base_file_path = settings_dir / "base.py"
         with open(base_file_path, "r") as f:
             contents = f.read()
-        contents = contents.replace("'DIRS': []", "'DIRS': [BASE_DIR / 'templates']")
+        contents = contents.replace('"DIRS": []', '"DIRS": [BASE_DIR / "templates"]')
         with open(base_file_path, "w") as f:
             f.write(contents)
 
