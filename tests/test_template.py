@@ -128,6 +128,11 @@ def test_dev_settings(creator):
     assert (settings_dir / "dev.py").exists()
 
 
+def test_owasp_configuration(creator):
+    creator.setup_owasp()
+    assert (creator.dest_dir / "zap.conf").exists()
+
+
 @npm_is_present
 def test_npm(creator):
     creator.set_up_npm()

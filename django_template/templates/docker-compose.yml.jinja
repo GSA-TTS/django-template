@@ -17,11 +17,14 @@ services:
       - DATABASE_URL=postgres://{{ app_name }}_user:{{ app_name }}_password@db/{{ app_name }}
       - RUNNING_IN_DOCKER=yup
       - DJANGO_SETTINGS_MODULE={{ app_name }}.settings.dev
+      - ALLOWED_HOSTS=localhost,app
     stdin_open: true
     tty: true
     ports:
       - "8000:8000"
-    command: "python manage.py runserver 0.0.0.0:8000"
+    command: >
+      bash -c "python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000"
 
   db:
     image: postgres:12.8
@@ -29,5 +32,14 @@ services:
       - POSTGRES_DB={{ app_name }}
       - POSTGRES_USER={{ app_name }}_user
       - POSTGRES_PASSWORD={{ app_name }}_password
+
+  owasp:
+    image: owasp/zap2docker-weekly
+    command: zap-baseline.py -t http://app:8000 -c zap.conf -I -r zap_report.html
+    volumes:
+      - .:/zap/wrk/
+    links: ["app"]
+    profiles: ["owasp-scan"]
+
 
   # gulp image goes here

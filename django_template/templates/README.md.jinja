@@ -47,8 +47,8 @@ more information on setting these up successfully.
 * Tests: `pipenv exec pytest`
 * Python linter: `pipenv exec black`
 * Accessibility scan: `./bin/pa11y-scan`
-* Dynamic security scan: `./bin/owasp-scan`
-* Static security scan: `bundle exec rake brakeman`
+* Dynamic security scan: `docker-compose run owasp`
+* Static security scan: `pipenv run bandit -r .`
 * Python dependency checks: `pipenv check`
 * JS dependency checks: `./yarn audit`
 
