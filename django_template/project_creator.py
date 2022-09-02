@@ -326,7 +326,8 @@ class ProjectCreator:
     def set_up_npm(self):
         """install node modules in the destination."""
         self.write_templated_file(
-            "package.json.jinja", "package.json",
+            "package.json.jinja",
+            "package.json",
         )
         # tentatively lock dependency versions
         self.write_templated_file("package-lock.json", "package-lock.json")
