@@ -9,7 +9,7 @@ from django_template.project_creator import ProjectCreator
 
 @pytest.fixture
 def creator(tmp_path):
-    yield ProjectCreator(tmp_path, config={"uswds": True})
+    yield ProjectCreator(tmp_path, config={"uswds": True, "cloud_gov": {}})
 
 
 def _check_npm_present():
@@ -29,6 +29,11 @@ npm_is_present = pytest.mark.skipif(
 def exists_and_non_empty(path):
     """Return True if the path exists and the file isn't empty."""
     return path.exists() and path.stat().st_size > 0
+
+
+def dir_exists_and_non_empty(path):
+    """Return True if the path exists, is a directory, and is not empty."""
+    return path.exists() and path.is_dir() and any(path.iterdir())
 
 
 def test_dir_exists(creator):
@@ -176,3 +181,11 @@ def test_github_actions(creator):
     creator.set_up_github_actions()
     assert (creator.dest_dir / ".github" / "actions").exists()
     assert (creator.dest_dir / ".github" / "workflows").exists()
+
+
+def test_terraform(creator):
+    creator.set_up_terraform()
+    assert dir_exists_and_non_empty(creator.dest_dir / "terraform")
+    assert dir_exists_and_non_empty(creator.dest_dir / "bin" / "ops")
+    assert exists_and_non_empty(creator.dest_dir / "manifest.yml")
+    assert dir_exists_and_non_empty(creator.dest_dir / "config" / "deployment")

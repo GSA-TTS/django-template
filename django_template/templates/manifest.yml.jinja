@@ -1,0 +1,11 @@
+---
+applications:
+- name: {{ app_name }}-((env))
+  buildpack: python_buildpack
+  instances: ((web_instances))
+  memory: ((web_memory))
+  env:
+    ALLOWED_HOSTS: .app.cloud.gov
+    DJANGO_SETTINGS_MODULE: {{ app_name }}.settings.prod
+  services:
+  - {{ app_name }}-rds-((env))
