@@ -100,22 +100,34 @@ class ProjectCreator:
 
         return responses
 
-    def write_file(self, relative_path, content):
-        """Write a file into the destination directory."""
+    def write_file(self, relative_path, content, mode=None):
+        """Write a file into the destination directory.
+
+        If mode is specified, set it as the mode of the resulting file.
+        """
         file_path = self.dest_dir / relative_path
         with open(file_path, "w") as f:
             f.write(content)
 
+        if mode is not None:
+            file_path.chmod(mode)
+
     def copy_file(self, relative_source, relative_dest):
-        """Copy a file from our templates directory into the destination."""
+        """Copy a file from our templates directory into the destination.
+
+        In addition to copying the contents, it also copies the file's mode.
+        """
         dest_path = self.dest_dir / relative_dest
         source_path = Path(__file__).parent / "templates" / relative_source
         dest_path.write_bytes(source_path.read_bytes())
+        dest_path.chmod(source_path.stat().st_mode)
 
     def write_templated_file(self, template_name, destination_path):
         """Render a template and write it into the destination."""
         template = self.templates.get_template(template_name)
-        self.write_file(destination_path, template.render())
+        if template.filename is not None:  # template comes from a file
+            template_mode = Path(template.filename).stat().st_mode
+        self.write_file(destination_path, template.render(), template_mode)
 
     def _copy_directory_with_templates(self, relative_source_path, relative_dest_path):
         """Copy a directory of template files into the destination.
@@ -226,7 +238,7 @@ class ProjectCreator:
         self.write_templated_file(
             "django/urls.py", Path(self.app_name) / self.app_name / "urls.py"
         )
-        # set up templates
+        # set up Django templates
         template_dir = Path(self.app_name) / self.app_name / "templates"
         (self.dest_dir / template_dir).mkdir(parents=True, exist_ok=True)
         # copy because these are already jinja files
@@ -340,6 +352,17 @@ class ProjectCreator:
         """Set up Github Actions for CI/CD."""
         self._copy_directory_with_templates("github", ".github")
 
+    def set_up_terraform(self):
+        """Set up Terraform scripts to manage Cloud.gov infrastructure."""
+        self._copy_directory_with_templates("terraform", "terraform")
+        # utilities that Terraform needs
+        self._copy_directory_with_templates("bin", "bin")
+        # Cloudfoundry configuration
+        self.write_templated_file("manifest.yml.jinja", "manifest.yml")
+        self.copy_file("runtime.txt", "runtime.txt")
+        self._copy_directory_with_templates("config", "config")
+        self.copy_file("Procfile", "Procfile")
+
     # main method that runs all of our steps
 
     def run(self):
@@ -366,3 +389,6 @@ class ProjectCreator:
 
         if self.config.get("github_actions"):
             self.set_up_github_actions()
+
+        if self.config.get("cloud_gov_terraform"):
+            self.set_up_terraform()

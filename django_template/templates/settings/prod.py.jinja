@@ -24,6 +24,8 @@ DATABASES["default"] = dj_database_url.config()
 
 SECRET_KEY = env.get_credential("DJANGO_SECRET_KEY", get_random_string(50))
 
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True

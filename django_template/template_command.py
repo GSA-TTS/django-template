@@ -29,12 +29,47 @@ from .project_creator import ProjectCreator
     prompt="Would you like to set up Github Actions for CI/CD",
     help="Configure Github Actions for the new application",
 )
-def template_command(app_name, uswds, circleci, github_actions):
+@click.option(
+    "--cloud-gov-terraform/--no-cloud-gov-terraform",
+    prompt="Create terrform scripts for cloud.gov infrastructure",
+    help="Configure Terraform for cloud.gov infrastructure",
+)
+@click.option(
+    "--cloud-gov-organization",
+    default="ORGANIZATION",
+    help="Cloud.gov organization name",
+)
+@click.option(
+    "--cloud-gov-staging-space",
+    default="staging",
+    help="Cloud.gov space to use for staging",
+)
+@click.option(
+    "--cloud-gov-production-space",
+    default="prod",
+    help="Cloud.gov space to use for production",
+)
+def template_command(
+    app_name,
+    uswds,
+    circleci,
+    github_actions,
+    cloud_gov_terraform,
+    cloud_gov_organization,
+    cloud_gov_staging_space,
+    cloud_gov_production_space,
+):
     """Run the command line script."""
     config = {
         "uswds": uswds,
         "circleci": circleci,
         "github_actions": github_actions,
+        "cloud_gov_terraform": cloud_gov_terraform,
+        "cloud_gov": {
+            "organization": cloud_gov_organization,
+            "staging_space": cloud_gov_staging_space,
+            "production_space": cloud_gov_production_space,
+        },
     }
     ProjectCreator(dest_dir=app_name, config=config).run()
     return 0  # successful exit code

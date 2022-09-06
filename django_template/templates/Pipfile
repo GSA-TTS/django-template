@@ -6,14 +6,15 @@ name = "pypi"
 [packages]
 django = "*"
 django-csp = "*"
+django-debug-toolbar = "*"
 cfenv = "*"
+gunicorn = {version = "*", extras = ["gevent"]}
 dj-database-url = "*"
 psycopg2-binary = "*"
 whitenoise = "*"
 
 [dev-packages]
 wait4it = "*"
-django-debug-toolbar = "*"
 django-webtest = "*"
 nplusone = "*"
 coverage = "*"
