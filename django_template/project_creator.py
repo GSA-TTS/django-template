@@ -10,7 +10,6 @@ from requests import get
 
 class ProjectCreator:
     def __init__(self, dest_dir=None, config=None):
-
         """Create a ProjectCreator.
 
         For use off of the command line, pass in dest_dir and a config
