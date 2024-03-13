@@ -15,10 +15,10 @@ framework.
 * Initialize the application:
 
   ```shell
-  docker-compose build
-  docker-compose run app python manage.py migrate
+  docker compose build
+  docker compose run app python manage.py migrate
   ```
-* Run the server: `docker-compose up`
+* Run the server: `docker compose up`
 * Visit the site: http://localhost:8000
 
 ### Local Configuration
@@ -44,18 +44,12 @@ more information on setting these up successfully.
 
 ### Running tests
 
-* Tests: `pipenv exec pytest`
-* Python linter: `pipenv exec black`
-* Accessibility scan: `./bin/pa11y-scan`
-* Dynamic security scan: `docker-compose run owasp`
+* Tests: `pipenv run {{app_name}}/manage.py test`
+* Python linter: `pipenv run black`
+* Dynamic security scan: `docker compose up -d && docker compose run owasp`
 * Static security scan: `pipenv run bandit -r .`
 * Python dependency checks: `pipenv check`
-* JS dependency checks: `./yarn audit`
 
-#### Pa11y Scan
-
-When new pages are added to the application, ensure they are added to
-`./.pa11yci` so that they can be scanned.
 
 ### Automatic linting
 
