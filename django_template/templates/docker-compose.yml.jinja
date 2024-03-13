@@ -6,6 +6,8 @@ services:
       - ./{{ app_name }}:/{{ app_name }}
     working_dir: /{{ app_name }}
     entrypoint: python /{{ app_name }}/docker_entrypoint.py
+    depends_on:
+      - db
     deploy:
       restart_policy:
         condition: on-failure
@@ -34,6 +36,8 @@ services:
   owasp:
     image: owasp/zap2docker-weekly
     command: zap-baseline.py -t http://app:8000 -c zap.conf -I -r zap_report.html
+    depends_on:
+      - app
     volumes:
       - .:/zap/wrk/
     profiles: ["owasp-scan"]
