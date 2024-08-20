@@ -10,14 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # we already have docker-compose set up for local
+      # we already have docker compose set up for local
       # testing, use that here
       - name: Start containers
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
 
       - name: Run Tests
-        run: docker-compose run app python manage.py test
+        run: docker compose run app python manage.py test
 
       - name: Stop containers
         if: always()
-        run: docker-compose down
+        run: docker compose down

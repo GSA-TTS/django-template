@@ -23,7 +23,7 @@ def project(tmp_path_factory):
 
     # Try building the docker images here to make the later tests more
     # reliable.
-    creator.exec_in_destination(["docker-compose", "build"])
+    creator.exec_in_destination(["docker compose", "build"])
 
     yield creator
 
@@ -53,17 +53,17 @@ docker_is_running = pytest.mark.skipif(
 @docker_is_running
 def test_docker_compose_build(project):
     """Can run docker_compose build."""
-    project.exec_in_destination(["docker-compose", "build"])
+    project.exec_in_destination(["docker compose", "build"])
 
 
 @docker_is_running
 def test_docker_tests(project):
     """Can run tests in docker."""
     project.exec_in_destination(
-        ["docker-compose", "run", "app", "python", "manage.py", "migrate"]
+        ["docker compose", "run", "app", "python", "manage.py", "migrate"]
     )
     project.exec_in_destination(
-        ["docker-compose", "run", "app", "python", "manage.py", "test"]
+        ["docker compose", "run", "app", "python", "manage.py", "test"]
     )
 
 
@@ -72,14 +72,14 @@ def _docker_up(project):
     try:
         project.exec_in_destination(
             # run in daemon mode
-            ["docker-compose", "up", "-d"]
+            ["docker compose", "up", "-d"]
         )
         # that might take a while to get up and running, let's just wait
         # a magic number of seconds. TODO: use a better waiting method
         time.sleep(5)
         yield
     finally:
-        project.exec_in_destination(["docker-compose", "stop"])
+        project.exec_in_destination(["docker compose", "stop"])
 
 
 @docker_is_running
