@@ -28,7 +28,7 @@ jobs:
 
     # Upload the JSON file generated in the previous step
     - name: Upload Bandit results
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: Bandit Security report
         path: bandit-output.json
