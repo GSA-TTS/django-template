@@ -294,11 +294,11 @@ class ProjectCreator:
 
         # patch the default settings to have a templates directory
         base_file_path = settings_dir / "base.py"
-        with open(base_file_path, "r") as f:
-            contents = f.read()
-        contents = contents.replace('"DIRS": []', '"DIRS": [BASE_DIR / "templates"]')
-        with open(base_file_path, "w") as f:
-            f.write(contents)
+        self.re_sub_file(
+            base_file_path,
+            r'([\'"]DIRS[\'"]:\s*)\[\]',
+            r'\1[BASE_DIR / "templates"]',
+        )
 
         # need this utility for other settings files
         self.copy_file(
