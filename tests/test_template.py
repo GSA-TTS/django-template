@@ -108,9 +108,11 @@ def test_django_settings_directory(creator):
     assert (app_dir / "settings" / "__init__.py").exists()
     assert (app_dir / "settings" / "base.py").exists()
 
-    # no secret key in base.py
+    # no secret key in base.py and templates dir is configured
     with open(app_dir / "settings" / "base.py", "r") as f:
-        assert "SECRET_KEY" not in f.read()
+        settings_contents = f.read()
+    assert "SECRET_KEY" not in settings_contents
+    assert "'DIRS': [BASE_DIR / \"templates\"]" in settings_contents
 
 
 def test_django_settings_directory_twice(creator):
